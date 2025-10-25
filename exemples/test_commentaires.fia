@@ -1,0 +1,7 @@
+# commentaire en tête
+soit x = 1 # fin de ligne
+soit y = 2
+// un autre style
+si (x < y) {
+    imprimer("OK") // commentaire inline
+}

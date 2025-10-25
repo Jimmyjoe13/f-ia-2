@@ -1,13 +1,22 @@
+# ===========================
+# CHATBOT F-IA AVEC IA INTÉGRÉE
+# Chatbot conversationnel utilisant OpenAI GPT et DeepSeek
+# ===========================
+
+# === INITIALISATION ET VÉRIFICATION DU SYSTÈME ===
 imprimer("🤖 === CHATBOT F-IA AVEC IA INTÉGRÉE ===")
 imprimer("Chargement du système IA...")
 
+# Vérifier la configuration des plateformes IA (clés API)
 soit config_ia = verifier_config_ia()
 imprimer("📊 État de la configuration IA:")
-imprimer("  OpenAI:", config_ia["openai"])
+imprimer("  OpenAI:", config_ia["openai"])   # Affiche true/false selon la config
 imprimer("  DeepSeek:", config_ia["deepseek"])
 
+# Récupérer les plateformes IA disponibles (configurées)
 soit plateformes = lister_plateformes_ia()
 si (longueur(plateformes) == 0) {
+    # Aucune plateforme configurée - arrêter avec message d'aide
     imprimer("❌ Aucune plateforme IA configurée!")
     imprimer("💡 Configurez vos clés API dans le fichier .env")
     imprimer("   OPENAI_API_KEY=votre_cle_openai")
@@ -17,28 +26,38 @@ si (longueur(plateformes) == 0) {
 
 imprimer("✅ Plateformes IA disponibles:", plateformes)
 
+# === CONFIGURATION INITIALE DU BOT ===
+# Sélectionner la première plateforme disponible par défaut
 soit plateforme_defaut = plateformes[0]
-soit modele_defaut = "gpt-4.1-nano"
+soit modele_defaut = "gpt-4.1-nano"  # Modèle OpenAI par défaut
 
+# Adapter le modèle selon la plateforme sélectionnée
 si (plateforme_defaut == "deepseek") {
-    modele_defaut = "deepseek-chat"
+    modele_defaut = "deepseek-chat"  # Modèle DeepSeek pour conversation
 }
 
 imprimer("🎯 Plateforme active:", plateforme_defaut)
 imprimer("🧠 Modèle:", modele_defaut)
 
+# Variables de configuration du chatbot
 soit nom_bot = "F-IA Assistant Pro"
 soit contexte_bot = "Tu es un assistant intelligent créé avec le langage F-IA. Tu es serviable, créatif et tu parles français naturellement."
-soit compteur_messages = 0
-soit historique = []
+soit compteur_messages = 0  # Compteur des messages échangés
+soit historique = []         # Historique des 10 derniers échanges
 
+# === FONCTIONS UTILITAIRES ===
+
+# Fonction pour gérer l'historique des conversations
 fonction ajouter_historique(message, reponse) {
+    # Ajouter l'échange à l'historique
     ajouter(historique, {"message": message, "reponse": reponse})
+    # Limiter à 10 échanges maximum
     si (longueur(historique) > 10) {
-        retirer(historique, 0)
+        retirer(historique, 0)  # Supprimer le plus ancien
     }
 }
 
+# Fonction d'affichage de l'aide utilisateur
 fonction afficher_aide() {
     imprimer("📖 === AIDE CHATBOT F-IA PRO ===")
     imprimer("Commandes spéciales:")
@@ -53,6 +72,7 @@ fonction afficher_aide() {
     imprimer("💬 Parlez-moi naturellement pour une conversation IA!")
 }
 
+# Fonction d'affichage des statistiques du bot
 fonction afficher_stats() {
     imprimer("📊 === STATISTIQUES ===")
     imprimer("Bot:", nom_bot)
@@ -62,11 +82,13 @@ fonction afficher_stats() {
     imprimer("Historique:", longueur(historique), "échanges")
 }
 
+# Fonction d'affichage de l'historique des conversations
 fonction afficher_historique() {
     imprimer("📜 === HISTORIQUE ===")
     si (longueur(historique) == 0) {
         imprimer("Aucun historique disponible.")
     } sinon {
+        # Parcourir et afficher tous les échanges
         soit i = 0
         tant_que (i < longueur(historique)) {
             soit echange = historique[i]
@@ -78,17 +100,22 @@ fonction afficher_historique() {
     }
 }
 
+# Fonction pour changer de modèle IA
 fonction changer_modele() {
     imprimer("🧠 Modèles disponibles pour", plateforme_defaut, ":")
     soit modeles = lister_modeles_ia(plateforme_defaut)
+    
+    # Afficher la liste numérotée des modèles
     soit i = 0
     tant_que (i < longueur(modeles)) {
         imprimer("  ", i + 1, ".", modeles[i])
         i = i + 1
     }
+    
     imprimer("Tapez le numéro du modèle ou Entrée pour annuler:")
     soit choix = lire()
     
+    # Traiter le choix utilisateur (gestion manuelle car pas de conversion entier())
     si (choix != "") {
         si (choix == "1") {
             modele_defaut = modeles[0]
@@ -108,24 +135,30 @@ fonction changer_modele() {
                 imprimer("❌ Numéro invalide")
             }
         } sinon {
-            imprimer("❌ Numéro invalide")
+            imprimer("❌ Numéro invalide")  # Choix non supporté
         }
     }
 }
 
+# Fonction pour changer de plateforme IA
 fonction changer_plateforme() {
     imprimer("🌐 Plateformes disponibles:")
+    
+    # Afficher la liste des plateformes disponibles
     soit i = 0
     tant_que (i < longueur(plateformes)) {
         imprimer("  ", i + 1, ".", plateformes[i])
         i = i + 1
     }
+    
     imprimer("Tapez le numéro de la plateforme ou Entrée pour annuler:")
     soit choix = lire()
     
+    # Traiter le choix de plateforme
     si (choix != "") {
         si (choix == "1") {
             plateforme_defaut = plateformes[0]
+            # Adapter automatiquement le modèle par défaut
             si (plateforme_defaut == "openai") {
                 modele_defaut = "gpt-4.1-nano"
             } sinon si (plateforme_defaut == "deepseek") {
@@ -136,8 +169,9 @@ fonction changer_plateforme() {
         } sinon si (choix == "2") {
             si (longueur(plateformes) > 1) {
                 plateforme_defaut = plateformes[1]
+                # Adapter le modèle (BUG: devrait être gpt-4.1-nano pas gpt-3.5)
                 si (plateforme_defaut == "openai") {
-                    modele_defaut = "gpt-3.5"
+                    modele_defaut = "gpt-4.1-nano"  # TODO: Corriger en gpt-4.1-nano
                 } sinon si (plateforme_defaut == "deepseek") {
                     modele_defaut = "deepseek-chat"
                 }
@@ -147,54 +181,68 @@ fonction changer_plateforme() {
                 imprimer("❌ Numéro invalide")
             }
         } sinon {
-            imprimer("❌ Numéro invalide")
+            imprimer("❌ Numéro invalide")  # Choix non supporté
         }
     }
 }
 
+# === DÉMARRAGE DU CHATBOT ===
 imprimer("")
 imprimer("🎉 Bienvenue dans", nom_bot, "!")
 imprimer("Propulsé par", plateforme_defaut, "avec le modèle", modele_defaut)
-afficher_aide()
+afficher_aide()  # Afficher l'aide au démarrage
 
-tant_que (vrai) {
+# === BOUCLE PRINCIPALE DU CHATBOT ===
+tant_que (vrai) {  # Boucle infinie jusqu'à "quitter"
     imprimer("")
     imprimer("👤 Vous:")
-    soit message_utilisateur = lire()
+    soit message_utilisateur = lire()  # Lire l'entrée utilisateur
     
+    # === TRAITEMENT DES COMMANDES SPÉCIALES ===
     si (message_utilisateur == "quitter") {
+        # Commande de sortie
         imprimer("👋 Merci d'avoir utilisé", nom_bot, "!")
         imprimer("💻 Développé avec le langage F-IA")
         arreter()
     } sinon si (message_utilisateur == "/aide") {
-        afficher_aide()
+        afficher_aide()  # Afficher l'aide
     } sinon si (message_utilisateur == "/stats") {
-        afficher_stats()
+        afficher_stats()  # Afficher les statistiques
     } sinon si (message_utilisateur == "/historique") {
-        afficher_historique()
+        afficher_historique()  # Afficher l'historique
     } sinon si (message_utilisateur == "/modele") {
-        changer_modele()
+        changer_modele()  # Interface de changement de modèle
     } sinon si (message_utilisateur == "/plateforme") {
-        changer_plateforme()
+        changer_plateforme()  # Interface de changement de plateforme
     } sinon si (message_utilisateur == "/reset") {
+        # Réinitialiser l'historique et les compteurs
         historique = []
         compteur_messages = 0
         imprimer("🔄 Historique réinitialisé!")
     } sinon si (message_utilisateur == "") {
+        # Message vide - demander une entrée
         imprimer("💭 Tapez quelque chose ou /aide pour l'aide")
     } sinon {
+        # === TRAITEMENT DES MESSAGES NORMAUX AVEC IA ===
         imprimer("🤖", nom_bot, "réfléchit...")
         
+        # Appeler l'IA pour générer une réponse contextuelle
         soit reponse_ia = generer_reponse_bot(
-            plateforme_defaut,
-            modele_defaut,
-            message_utilisateur,
-            contexte_bot
+            plateforme_defaut,    # Plateforme IA active
+            modele_defaut,        # Modèle IA actif
+            message_utilisateur,  # Message de l'utilisateur
+            contexte_bot         # Contexte/personnalité du bot
         )
         
+        # Afficher la réponse de l'IA
         imprimer("🤖", nom_bot, ":", reponse_ia)
         
+        # Sauvegarder l'échange dans l'historique
         ajouter_historique(message_utilisateur, reponse_ia)
-        compteur_messages = compteur_messages + 1
+        compteur_messages = compteur_messages + 1  # Incrémenter le compteur
     }
 }
+
+# === FIN DU PROGRAMME ===
+# Le programme se termine quand l'utilisateur tape "quitter"
+# ou si une erreur critique survient (arreter() appelé)
