@@ -4,8 +4,6 @@ import math
 import random
 from errors import RuntimeError
 
-
-
 def _imprimer(*args):
     # Supporte l'affichage de plusieurs arguments comme print
     print(*args)
@@ -39,22 +37,100 @@ def _puissance(base, exposant):
     except Exception:
         raise RuntimeError("Erreur d'exécution: 'puissance' attend (base, exposant)")
 
-def _entier(valeur):
-    try:
-        if isinstance(valeur, bool):
-            return int(valeur)
-    except Exception:
-        pass
-    try:
-        return int(valeur)
-    except Exception:
-        raise RuntimeError("Erreur d'exécution: 'entier' ne peut pas convertir cette valeur")
+# ========== CONVERSIONS ROBUSTES (NOUVELLES) ==========
 
-def _chaine(valeur):
+def _entier(val):
+    """Conversion robuste vers entier avec gestion d'erreurs explicites"""
+    # None -> 0
+    if val is None:
+        return 0
+    # Bool -> 1/0
+    if isinstance(val, bool):
+        return 1 if val else 0
+    # Int -> identique
+    if isinstance(val, int):
+        return val
+    # Float -> tronqué vers 0 (comme int())
+    if isinstance(val, float):
+        return int(val)
+    # Str -> parsing tolerant
+    if isinstance(val, str):
+        s = val.strip()
+        if s == "":
+            return 0
+        # Essayer int direct
+        try:
+            return int(s)
+        except ValueError:
+            # Essayer float puis tronquer
+            try:
+                return int(float(s))
+            except ValueError:
+                raise RuntimeError(f"Conversion invalide: entier('{val}')")
+    # List/Dict -> erreur
+    if isinstance(val, (list, dict)):
+        raise RuntimeError("Conversion invalide: entier() ne supporte pas les listes ou dictionnaires")
+    # Fallback Python
     try:
-        return str(valeur)
+        return int(val)
     except Exception:
-        raise RuntimeError("Erreur d'exécution: 'chaine' ne peut pas convertir cette valeur")
+        raise RuntimeError(f"Conversion invalide: entier({val})")
+
+def _decimal(val):
+    """Conversion robuste vers nombre décimal (float)"""
+    if val is None:
+        return 0.0
+    if isinstance(val, bool):
+        return 1.0 if val else 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        s = val.strip()
+        if s == "":
+            return 0.0
+        try:
+            return float(s)
+        except ValueError:
+            raise RuntimeError(f"Conversion invalide: decimal('{val}')")
+    if isinstance(val, (list, dict)):
+        raise RuntimeError("Conversion invalide: decimal() ne supporte pas les listes ou dictionnaires")
+    try:
+        return float(val)
+    except Exception:
+        raise RuntimeError(f"Conversion invalide: decimal({val})")
+
+def _chaine(val):
+    """Conversion robuste vers chaîne avec format cohérent"""
+    # Pour list/dict, format JSON compact pour cohérence
+    if isinstance(val, (list, dict)):
+        try:
+            return json.dumps(val, ensure_ascii=False, separators=(',', ':'))
+        except Exception:
+            return str(val)
+    if val is None:
+        return ""
+    return str(val)
+
+def _booleen(val):
+    """Conversion robuste vers booléen avec règles explicites"""
+    if val is None:
+        return False
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, (int, float)):
+        return val != 0
+    if isinstance(val, str):
+        s = val.strip().lower()
+        if s in ["true", "vrai", "oui", "1"]:
+            return True
+        if s in ["false", "faux", "non", "0", ""]:
+            return False
+        return True  # toute autre chaîne non vide -> True
+    if isinstance(val, (list, dict)):
+        return len(val) > 0
+    return True
+
+# ========== FONCTIONS EXISTANTES ==========
 
 # Dictionnaires
 def _cles(d):
@@ -240,8 +316,12 @@ FONCTIONS_INTEGREES = {
     "aleatoire": _aleatoire,
     "racine": _racine,
     "puissance": _puissance,
+    
+    # Conversions robustes (NOUVELLES)
     "entier": _entier,
+    "decimal": _decimal,
     "chaine": _chaine,
+    "booleen": _booleen,
 
     # Dictionnaires
     "cles": _cles,

@@ -312,8 +312,9 @@ class ParserFIA:
             return self.analyser_liste()
         elif token.type == 'ACCOLADE_OUVRANTE':
             return self.analyser_dictionnaire()
-        elif token.type == 'IDENTIFIANT' or token.type in ['IMPRIMER', 'LONGUEUR']:
-            nom = self.consommer_token().valeur # Consommer le token, qu'il soit IDENTIFIANT, IMPRIMER ou LONGUEUR
+        elif token.type in ['IDENTIFIANT', 'IMPRIMER', 'LONGUEUR', 'ENTIER', 'DECIMAL', 'BOOLEEN', 'CHAINE']:
+        # Autoriser l'utilisation de fonctions intégrées mappées comme mots-clés
+            nom = self.consommer_token().valeur
             return Identifiant(nom)
         elif token.type == 'PARENTHESE_OUVRANTE':
             self.consommer_token('PARENTHESE_OUVRANTE')

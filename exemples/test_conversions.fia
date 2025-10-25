@@ -1,0 +1,32 @@
+imprimer("== Tests entier() ==")
+imprimer(entier("12"))
+imprimer(entier("  -3 "))
+imprimer(entier("12.9"))
+imprimer(entier(3.7))
+imprimer(entier(vrai))
+imprimer(entier(faux))
+imprimer(entier(nul))
+
+imprimer("\n== Tests decimal() ==")
+imprimer(decimal("12"))
+imprimer(decimal("  -3.25 "))
+imprimer(decimal(5))
+imprimer(decimal(faux))
+imprimer(decimal(nul))
+
+imprimer("\n== Tests chaine() ==")
+imprimer(chaine(123))
+imprimer(chaine(4.56))
+imprimer(chaine(vrai))
+imprimer(chaine(nul))
+soit l = [1, 2, 3]
+soit d = {"a": 1, "b": 2}
+imprimer(chaine(l))
+imprimer(chaine(d))
+
+imprimer("\n== Tests booleen() ==")
+imprimer(booleen(0), booleen(1), booleen(-1))
+imprimer(booleen("true"), booleen("FALSE"), booleen("ok"))
+imprimer(booleen(""), booleen(nul))
+imprimer(booleen([]), booleen([0]))
+imprimer(booleen({}), booleen({"x":1}))

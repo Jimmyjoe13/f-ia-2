@@ -290,7 +290,15 @@ class VisiteurInterpretation:
             return self._get_variable(nom)
 
     def visiter_appel_fonction(self, appel):
-        nom_fonction = appel.nom_fonction
+    # Extraire le nom de fonction (peut être une chaîne ou un objet AST)
+        if isinstance(appel.nom_fonction, str):
+            nom_fonction = appel.nom_fonction
+        elif hasattr(appel.nom_fonction, 'nom'):  # Cas Identifiant
+            nom_fonction = appel.nom_fonction.nom
+        elif hasattr(appel.nom_fonction, 'valeur'):  # Cas Littéral
+            nom_fonction = appel.nom_fonction.valeur
+        else:
+            nom_fonction = str(appel.nom_fonction)
 
         # Exécuter et convertir les arguments
         args = [self.executer(arg) for arg in appel.arguments]
