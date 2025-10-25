@@ -1,4 +1,4 @@
-# ast.py
+# fia_ast.py
 
 from abc import ABC, abstractmethod
 
@@ -127,6 +127,14 @@ class AccesIndex(Noeud):
 
     def accepter(self, visiteur):
         return visiteur.visiter_acces_index(self)
+
+class AccesDictionnaire(Noeud):
+    def __init__(self, base, cle):
+        self.base = base # Noeud expression (le dictionnaire)
+        self.cle = cle # Noeud expression (la clé)
+
+    def accepter(self, visiteur):
+        return visiteur.visiter_acces_dictionnaire(self)
 
 class ExpressionStatement(Noeud):
     def __init__(self, expression):

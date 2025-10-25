@@ -2,7 +2,7 @@
 from errors import RuntimeError, ReturnException
 import builtin
 import ia_module  # Module IA maintenant activé
-from fia_ast import Identifiant, AccesIndex, ExpressionStatement, Noeud
+from fia_ast import Identifiant, AccesIndex, AccesDictionnaire, ExpressionStatement, Noeud
 
 class VisiteurInterpretation:
     def __init__(self):
@@ -52,6 +52,13 @@ class VisiteurInterpretation:
             if index_value < 0 or index_value >= len(base_list):
                 raise RuntimeError("Erreur d'exécution: Index de liste hors limites")
             base_list[index_value] = valeur
+        elif isinstance(cible, AccesDictionnaire):
+            # Assignation à une clé de dictionnaire
+            base_dict = self.executer(cible.base)
+            cle_value = self.executer(cible.cle)
+            if not isinstance(base_dict, dict):
+                raise RuntimeError("Erreur d'exécution: L'opérande gauche de l'assignation par clé doit être un dictionnaire")
+            base_dict[cle_value] = valeur
         else:
             raise RuntimeError(f"Erreur d'exécution: Cible d'assignation invalide")
 
@@ -71,10 +78,11 @@ class VisiteurInterpretation:
 
     def _set_variable(self, nom, valeur):
         """Définit une variable dans le contexte local actuel."""
-        if self.contextes: # S'assure qu'il y a au moins un contexte
-            self.contextes[-1][nom] = valeur # Affecte dans le contexte du haut de la pile
+        if self.contextes:
+            self.contextes[-1][nom] = valeur
         else:
-            # Cas improbable si la pile est toujours initialisée
+            # Fallback au contexte global
+            self.contextes = [{}]
             self.contextes[0][nom] = valeur
 
     def visiter_expression_binaire(self, expr_bin):
@@ -133,11 +141,15 @@ class VisiteurInterpretation:
     def visiter_appel_fonction(self, appel):
         nom_fonction = appel.nom_fonction
 
+        # Exécuter et convertir les arguments
         args = [self.executer(arg) for arg in appel.arguments]
+        # Convertir les objets AST en types Python natifs
+        args_convertis = [self._convertir_en_python(arg) for arg in args]
+
         if nom_fonction in self.fonctions_integrees:
             fonction = self.fonctions_integrees[nom_fonction]
             try:
-                return fonction(*args)
+                return fonction(*args_convertis)  # Utiliser args_convertis
             except TypeError as e:
                 raise RuntimeError(f"Erreur d'exécution lors de l'appel de '{nom_fonction}': {e}")
             except Exception as e:
@@ -187,6 +199,18 @@ class VisiteurInterpretation:
             return self.executer(element)
         return element
 
+    def visiter_acces_dictionnaire(self, acces_dict):
+        base_value = self.executer(acces_dict.base)
+        cle_value = self.executer(acces_dict.cle)
+        
+        if not isinstance(base_value, dict):
+            raise RuntimeError("Erreur d'exécution: L'opérande gauche de l'accès par clé doit être un dictionnaire")
+        
+        if cle_value not in base_value:
+            raise RuntimeError(f"Erreur d'exécution: Clé '{cle_value}' non trouvée dans le dictionnaire")
+        
+        return base_value[cle_value]
+
     # --- Autres méthodes d'acceptation à implémenter ---
     def visiter_condition(self, condition):
         valeur_condition = self.executer(condition.condition)
@@ -218,9 +242,19 @@ class VisiteurInterpretation:
             print("🛑 Sécurité: boucle arrêtée après 50 itérations")
 
     def visiter_bloc(self, bloc):
+        # Créer un nouveau contexte pour ce bloc
+        self.contextes.append({})  # Nouveau contexte local
+        
         resultat = None
-        for instruction in bloc.instructions:
-            resultat = self.executer(instruction)
+        try:
+            for instruction in bloc.instructions:
+                resultat = self.executer(instruction)
+        finally:
+            # Fusionner les variables du bloc avec le contexte parent avant de le supprimer
+            contexte_bloc = self.contextes.pop()  # Retirer le contexte du bloc
+            if self.contextes:  # S'assurer qu'il reste un contexte parent
+                self.contextes[-1].update(contexte_bloc)  # Fusionner avec le parent
+        
         return resultat
 
     def visiter_fonction(self, fonction):
@@ -241,6 +275,24 @@ class VisiteurInterpretation:
             if valeur.replace('.', '').replace('-', '').isdigit():
                 return float(valeur) if '.' in valeur else int(valeur)
         return valeur
+
+    def _convertir_en_python(self, valeur):
+        """Convertit récursivement les objets F-IA en types Python natifs."""
+        # Import local pour éviter les imports circulaires
+        from fia_ast import Littéral
+        
+        if isinstance(valeur, Littéral):
+            # Si c'est un Littéral, convertir sa valeur
+            return self._convertir_en_python(valeur.valeur)
+        elif isinstance(valeur, list):
+            # Convertir récursivement chaque élément de la liste
+            return [self._convertir_en_python(item) for item in valeur]
+        elif isinstance(valeur, dict):
+            # Convertir récursivement chaque valeur du dictionnaire
+            return {k: self._convertir_en_python(v) for k, v in valeur.items()}
+        else:
+            # Types Python de base : int, float, str, bool, None
+            return valeur
 
 # Exemple d'utilisation
 if __name__ == "__main__":

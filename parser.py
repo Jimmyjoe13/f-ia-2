@@ -28,7 +28,11 @@ class ParserFIA:
     def consommer_token(self, type_attendu=None):
         token = self.regarder_token()
         if type_attendu and token.type != type_attendu:
-            raise ParseError(f"Erreur de syntaxe: attendu '{type_attendu}', trouvé '{token.type}' à la ligne {token.ligne}")
+            raise ParseError(
+                f"Attendu '{type_attendu}', trouvé '{token.type}' ('{token.valeur}')",
+                ligne=token.ligne,
+                colonne=token.colonne
+            )
         self.position += 1
         return token
 
@@ -47,26 +51,33 @@ class ParserFIA:
         elif token.type == 'POUR':
             return self.analyser_boucle_pour()
         elif token.type == 'IDENTIFIANT':
-            # Vérifier si c'est une assignation (x = ...) ou un accès indexé (x[0] = ...)
-            if self.position + 1 < len(self.tokens):
-                if self.tokens[self.position + 1].type == 'ASSIGNATION':
-                    return self.analyser_assignation()
-                # Gérer le cas où c'est une expression avec accès indexé suivi d'assignation
-                # Ex: liste[0] = 10
-                # Le token courant est 'IDENTIFIANT', le suivant est 'CROCHET_OUVRANT'
-                # On devra appeler analyser_expression_primaire pour traiter 'liste[0]'
-                # et vérifier si le token après l'accès indexé est ASSIGNATION
-                # Cela se fait dans analyser_assignation_expression
-            # Sinon, c'est une expression (appel de fonction, variable seule, etc.)
+            # Regarder plus loin pour déterminer le type d'instruction
+            return self.analyser_instruction_identifiant()
+        else:
+            # Pour les expressions qui ne commencent pas par un identifiant
             expr = self.analyser_expression()
             # Rendre le point-virgule optionnel ici aussi
             if self.regarder_token().type == 'POINT_VIRGULE':
                 self.consommer_token('POINT_VIRGULE')
             return ExpressionStatement(expr)
+
+    def analyser_instruction_identifiant(self):
+        # Sauvegarder la position pour pouvoir revenir en arrière
+        position_sauvee = self.position
+        
+        # Analyser l'expression complète (identifiant + accès éventuels)
+        expr = self.analyser_expression()
+        
+        # Vérifier si c'est suivi d'une assignation
+        if self.regarder_token().type == 'ASSIGNATION':
+            # C'est une assignation
+            self.consommer_token('ASSIGNATION')
+            valeur = self.analyser_expression()
+            if self.regarder_token().type == 'POINT_VIRGULE':
+                self.consommer_token('POINT_VIRGULE')
+            return Assignation(expr, valeur)
         else:
-            # Pour les expressions qui ne commencent pas par un identifiant
-            expr = self.analyser_expression()
-            # Rendre le point-virgule optionnel ici aussi
+            # C'est juste une expression
             if self.regarder_token().type == 'POINT_VIRGULE':
                 self.consommer_token('POINT_VIRGULE')
             return ExpressionStatement(expr)
@@ -83,18 +94,6 @@ class ParserFIA:
             self.consommer_token('POINT_VIRGULE')
         # --- FIN CHANGEMENT ---
         return DeclarationVariable(nom, valeur)
-
-    def analyser_assignation(self):
-        cible = self.analyser_primaire() # Pour gérer `liste[0] = ...`
-        if self.regarder_token().type != 'ASSIGNATION':
-            raise ParseError(f"Erreur de syntaxe: assignation attendue, trouvé '{self.regarder_token().type}'")
-        self.consommer_token('ASSIGNATION')
-        valeur = self.analyser_expression()
-        # RENDRE LE POINT-VIRGULE OPTIONNEL
-        if self.regarder_token().type == 'POINT_VIRGULE':
-            self.consommer_token('POINT_VIRGULE')
-        # --- FIN CHANGEMENT ---
-        return Assignation(cible, valeur)
 
     def analyser_fonction(self):
         self.consommer_token('FONCTION')
@@ -223,7 +222,7 @@ class ParserFIA:
             if self.regarder_token().type == 'PARENTHESE_OUVRANTE':
                 gauche = self.analyser_appel_fonction(gauche)
             elif self.regarder_token().type == 'CROCHET_OUVRANT':
-                gauche = self.analyser_acces_index(gauche)
+                gauche = self.analyser_acces_crochet(gauche)
             else:
                 break
         return gauche
@@ -245,11 +244,17 @@ class ParserFIA:
              nom_fonction = nom_fonction_noeud # Pourrait être traité différemment si nécessaire
         return AppelFonction(nom_fonction, arguments)
 
-    def analyser_acces_index(self, base_noeud):
+    def analyser_acces_crochet(self, base_noeud):
         self.consommer_token('CROCHET_OUVRANT')
         index_expr = self.analyser_expression()
         self.consommer_token('CROCHET_FERMANT')
-        return AccesIndex(base_noeud, index_expr)
+        
+        # Déterminer si c'est un accès liste ou dictionnaire
+        # Si l'expression d'index est un littéral string, c'est probablement un dictionnaire
+        if hasattr(index_expr, 'valeur') and isinstance(index_expr.valeur, str):
+            return AccesDictionnaire(base_noeud, index_expr)
+        else:
+            return AccesIndex(base_noeud, index_expr)
 
     def analyser_primaire(self):
         token = self.regarder_token()
@@ -270,6 +275,8 @@ class ParserFIA:
             return Littéral(None)
         elif token.type == 'CROCHET_OUVRANT':
             return self.analyser_liste()
+        elif token.type == 'ACCOLADE_OUVRANTE':
+            return self.analyser_dictionnaire()
         elif token.type == 'IDENTIFIANT' or token.type in ['IMPRIMER', 'LONGUEUR']:
             nom = self.consommer_token().valeur # Consommer le token, qu'il soit IDENTIFIANT, IMPRIMER ou LONGUEUR
             return Identifiant(nom)
@@ -290,6 +297,64 @@ class ParserFIA:
                 self.consommer_token('VIRGULE')
                 elements.append(self.analyser_expression())
         self.consommer_token('CROCHET_FERMANT') # ']'
+        
+        # Évaluer immédiatement les éléments de la liste
+        elements_evalues = []
+        for elem in elements:
+            if hasattr(elem, 'valeur') and hasattr(elem, 'accepter'):
+                # Si c'est un Littéral, extraire sa valeur
+                elements_evalues.append(elem.valeur)
+            else:
+                elements_evalues.append(elem)
+        
+        return Littéral(elements_evalues)
+
+    def analyser_dictionnaire(self):
+        self.consommer_token('ACCOLADE_OUVRANTE') # '{'
+        elements = {}
+        
+        if self.regarder_token().type != 'ACCOLADE_FERMANTE':
+            # Premier élément
+            cle = self.analyser_expression()
+            self.consommer_token('DEUX_POINTS') # ':'
+            valeur = self.analyser_expression()
+            
+            # Extraire la valeur de la clé et de la valeur si c'est un Littéral
+            if hasattr(cle, 'valeur'):
+                cle_str = cle.valeur
+            else:
+                cle_str = str(cle)
+            
+            if hasattr(valeur, 'valeur'):
+                valeur_python = valeur.valeur
+            else:
+                valeur_python = valeur
+                
+            elements[cle_str] = valeur_python
+            
+            # Éléments suivants
+            while self.regarder_token().type == 'VIRGULE':
+                self.consommer_token('VIRGULE')
+                if self.regarder_token().type == 'ACCOLADE_FERMANTE':
+                    break  # Virgule de fin autorisée
+                
+                cle = self.analyser_expression()
+                self.consommer_token('DEUX_POINTS')
+                valeur = self.analyser_expression()
+                
+                if hasattr(cle, 'valeur'):
+                    cle_str = cle.valeur
+                else:
+                    cle_str = str(cle)
+                
+                if hasattr(valeur, 'valeur'):
+                    valeur_python = valeur.valeur
+                else:
+                    valeur_python = valeur
+                    
+                elements[cle_str] = valeur_python
+        
+        self.consommer_token('ACCOLADE_FERMANTE') # '}'
         return Littéral(elements)
 
 # Exemple d'utilisation
