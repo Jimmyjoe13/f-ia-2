@@ -1,17 +1,24 @@
 # interpreter.py
 from errors import RuntimeError, ReturnException
 import builtin
-import ia_module # Importer si les fonctions IA sont activées
-from fia_ast import Identifiant, AccesIndex, ExpressionStatement, Noeud # Importation des nœuds AST nécessaires
+import ia_module  # Module IA maintenant activé
+from fia_ast import Identifiant, AccesIndex, ExpressionStatement, Noeud
 
 class VisiteurInterpretation:
     def __init__(self):
         # Utilisation d'une pile de contextes pour la portée des variables
         self.contextes = [{}]  # Pile de dictionnaires. Le premier est le contexte global.
         self.fonctions_integrees = builtin.FONCTIONS_INTEGREES.copy() # Copie des fonctions intégrées
-        # self.fonctions_integrees.update(ia_module.FONCTIONS_IA) # Décommenter quand IA sera implémentée
+        
+        # ACTIVATION DU MODULE IA
+        self.fonctions_integrees.update(ia_module.FONCTIONS_IA)  # Ajout des fonctions IA
+        
         # Pour stocker les fonctions définies par l'utilisateur
         self.fonctions_definies = {}
+        
+        print("🤖 Module IA activé - Fonctions disponibles:")
+        for nom_fonction in ia_module.FONCTIONS_IA.keys():
+            print(f"   • {nom_fonction}()")
 
     def executer(self, noeud_ast):
         return noeud_ast.accepter(self)
@@ -133,6 +140,9 @@ class VisiteurInterpretation:
                 return fonction(*args)
             except TypeError as e:
                 raise RuntimeError(f"Erreur d'exécution lors de l'appel de '{nom_fonction}': {e}")
+            except Exception as e:
+                # Gestion des erreurs spécifiques du module IA
+                raise RuntimeError(f"Erreur IA dans '{nom_fonction}': {str(e)}")
         elif nom_fonction in self.fonctions_definies:
             # Appel d'une fonction définie par l'utilisateur
             func_def = self.fonctions_definies[nom_fonction]
@@ -241,6 +251,10 @@ if __name__ == "__main__":
     soit y = 20;
     soit somme = x + y;
     imprimer("La somme est ", somme);
+    
+    # Test IA
+    soit modele = reseau_neuronal([2, 5, 1], "relu")
+    soit donnees = charger_jeu_de_donnees("iris")
     """
     lexer = LexerFIA(code)
     tokens = lexer.tokeniser()
