@@ -11,7 +11,7 @@
 - **REPL interactif** avec debug détaillé
 - **Gestion d'erreurs avancée** avec localisation ligne/colonne
 - **30+ fonctions intégrées** pour manipulation de données
-- **🔥 IA générative intégrée** - OpenAI, DeepSeek, Anthropic (Claude)
+- **🔥 IA générative intégrée** - OpenAI, DeepSeek
 - **🆕 Chatbot conversationnel** - Exemples complets inclus
 - **🆕 Support "sinon si"** - Syntaxe conditionnelle enrichie
 - **🆕 Interaction utilisateur** - Fonctions `lire()` et `arreter()`
@@ -28,7 +28,7 @@ cd f-ia-2
 pip install -r requirements.txt
 ```
 
-## ⚙️ Configuration IA
+## ⚙️ Configuration IA (actuelle)
 
 Créez un fichier `.env` à la racine du projet :
 ```env
@@ -39,13 +39,9 @@ DEFAULT_OPENAI_MODEL=gpt-4.1-nano
 # DeepSeek
 DEEPSEEK_API_KEY=votre_cle_deepseek_ici
 DEFAULT_DEEPSEEK_MODEL=deepseek-chat
-
-# Anthropic (Claude)
-ANTHROPIC_API_KEY=votre_cle_anthropic_ici
-DEFAULT_ANTHROPIC_MODEL=claude-3-5-sonnet-latest
 ```
 
-> Assurez-vous d'installer aussi la dépendance `anthropic` si vous utilisez Claude (voir Requirements).
+> Note: le support Anthropic (Claude) n'est pas encore intégré. Il sera ajouté après le système de modules/imports.
 
 ## 🚀 Utilisation
 
@@ -192,7 +188,7 @@ pour nom dans ["Alice", "Bob"] {
 }
 ```
 
-## 🔥 Intégration IA Générative
+## 🔥 Intégration IA Générative (actuelle)
 
 ### Appel direct aux IA
 ```fia
@@ -201,9 +197,6 @@ imprimer("OpenAI:", reponse)
 
 soit code = appeler_ia("deepseek", "deepseek-coder", "Écris une fonction de tri en Python")
 imprimer("DeepSeek:", code)
-
-soit claude = appeler_ia("anthropic", nul, "Dis bonjour en 1 phrase")
-imprimer("Claude:", claude)
 ```
 
 ### Générer une réponse de chatbot
@@ -224,7 +217,7 @@ imprimer("Bot:", reponse_bot)
 - **AST** (`fia_ast.py`) - Nœuds de syntaxe (AssignationComposee, BouclePourDans, ...)
 - **Interpréteur** (`interpreter.py`) - Exécution (listes, dictionnaires, IA, pour...dans)
 - **Fonctions intégrées** (`builtin.py`) - Bibliothèque standard (conversions robustes)
-- **Intégration IA** (`ai_integration.py`) - OpenAI, DeepSeek, Anthropic
+- **Intégration IA** (`ai_integration.py`) - OpenAI, DeepSeek
 - **Module IA** (`ia_module.py`) - Fonctions d'intelligence artificielle
 - **REPL** (`repl.py`) - Interface interactive
 - **Gestion d'erreurs** (`errors.py`) - Système d'erreurs enrichi
@@ -233,20 +226,20 @@ imprimer("Bot:", reponse_bot)
 
 - Python 3.10+
 - `openai`
-- `anthropic` (si vous activez Claude)
 - Variables d'environnement `.env` comme indiqué plus haut
 
 ## 🗺️ Roadmap (prochaines étapes)
 
-- **Système de modules / imports**
-  - Syntaxe cible: `importer "utils.fia"` ou `importer utilitaires de "./lib/utils.fia"`
-  - Portées: variables du module isolées; export explicite ou import sélectif
-  - Cache de modules et résolution relative au fichier courant
-  - Chemins de recherche (ex: `./`, `./lib`, `FIA_PATH`)
+- **Système de modules / imports (PRIORITÉ)**
+  - Syntaxe cible initiale: `importer "utils.fia"`
+  - Résolution relative au fichier courant + chemins de recherche (`./`, `./lib`, `FIA_PATH`)
+  - Cache des modules (chargement unique)
+  - Contexte isolé par module et injection des symboles
   - Exemples et tests: `exemples/modules/`
+- **Support Anthropic (Claude)** (après modules/imports)
 - **Génération d'images** (DALL-E / Stable Diffusion)
 - **Améliorations REPL** (historique, multi-lignes, chargement de modules)
 
 ---
 
-**F-IA v1.2** - pour...dans, conversions robustes, et Claude (Anthropic) 🚀
+**F-IA v1.2 (en cours)** - pour...dans, conversions robustes, et modules/imports à venir 🚀
