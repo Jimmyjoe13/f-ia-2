@@ -1,0 +1,15 @@
+tant_que (vrai) {
+    imprimer("Utilisateur :")
+    soit entree = lire()
+    si (entree == "quitter") {
+        imprimer("Au revoir !")
+        arreter
+    }
+    si (entree == "Bonjour") {
+        imprimer("Salut !")
+    } sinon si (entree == "Comment ça va ?") {
+        imprimer("Je vais bien, merci !")
+    } sinon {
+        imprimer("Je n'ai pas compris.")
+    }
+}

@@ -10,7 +10,15 @@ class LexerError(FIAError):
 
 class ParseError(FIAError):
     """Erreur pendant l'analyse syntaxique."""
-    pass
+    def __init__(self, message, ligne=None, colonne=None):
+        super().__init__(message)
+        self.ligne = ligne
+        self.colonne = colonne
+        
+    def __str__(self):
+        if self.ligne is not None and self.colonne is not None:
+            return f"Erreur de syntaxe ligne {self.ligne}, colonne {self.colonne}: {self.args[0]}"
+        return self.args[0]
 
 class RuntimeError(FIAError):
     """Erreur pendant l'exécution du programme."""
