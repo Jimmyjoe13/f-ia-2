@@ -47,6 +47,8 @@ class LexerFIA:
             'attraper': 'ATTRAPER',
             'importer': 'IMPORTER',
             'de': 'DE',
+            'aleatoire': 'ALEATOIRE',
+            'arrondir': 'ARRONDIR',
             # Ajouter les mots-clés IA ici si implémentés
             # 'reseau_neuronal': 'RESEAU_NEURONAL',
             # 'apprentissage': 'APPRENTISSAGE',

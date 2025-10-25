@@ -1,0 +1,14 @@
+soit nom = "Test"
+imprimer("Démarrage du test:", nom)
+
+soit nombre = 42
+imprimer("Nombre:", nombre)
+
+soit message = "Bonjour"
+soit message_min = minuscule(message)
+imprimer("Message en minuscule:", message_min)
+
+soit liste_test = ["a", "b", "c"]
+imprimer("Longueur de la liste:", longueur(liste_test))
+
+imprimer("Test terminé avec succès !")

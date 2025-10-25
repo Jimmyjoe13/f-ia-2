@@ -1,5 +1,0 @@
-# Teste ce code dans ton REPL pour reproduire le bug
-soit x = 10
-soit y = 15
-si (x < y) { soit test = "vrai" } sinon { soit test = "faux" }
-imprimer(test)  # ❌ Erreur : variable 'test' non définie

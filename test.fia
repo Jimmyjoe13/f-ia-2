@@ -1,15 +1,201 @@
-tant_que (vrai) {
-    imprimer("Utilisateur :")
-    soit entree = lire()
-    si (entree == "quitter") {
-        imprimer("Au revoir !")
-        arreter
+soit nom_bot = "F-IA Assistant"
+soit version = "2.0"
+
+soit salutations = ["bonjour", "salut", "hello", "hey", "coucou", "bonsoir"]
+soit aurevoir = ["au revoir", "bye", "salut", "tchao", "à plus", "adieu"]
+soit questions_etat = ["comment ça va", "ça va", "comment allez vous", "comment tu vas"]
+soit questions_nom = ["comment tu t'appelles", "quel est ton nom", "qui es-tu", "ton nom"]
+soit questions_aide = ["aide", "help", "au secours", "que peux-tu faire"]
+
+soit reponses_salutations = [
+    "Bonjour ! Je suis votre assistant F-IA. Comment puis-je vous aider ?",
+    "Salut ! Que puis-je faire pour vous aujourd'hui ?",
+    "Hello ! Ravi de vous parler. Posez-moi vos questions !",
+    "Coucou ! Je suis là pour vous aider."
+]
+
+soit reponses_aurevoir = [
+    "Au revoir ! J'ai été ravi de discuter avec vous.",
+    "À bientôt ! N'hésitez pas à revenir me parler.",
+    "Bye ! Passez une excellente journée !",
+    "Tchao ! À la prochaine fois !"
+]
+
+soit reponses_etat = [
+    "Je vais très bien, merci ! Et vous ?",
+    "Parfait ! Je suis toujours prêt à vous aider.",
+    "Excellent ! Mes circuits fonctionnent à merveille.",
+    "Très bien ! Comment puis-je vous assister ?"
+]
+
+fonction contient_mot_cle(phrase, mots_cles) {
+    soit phrase_min = minuscule(phrase)
+    soit i = 0
+    tant_que (i < longueur(mots_cles)) {
+        soit mot_cherche = mots_cles[i]
+        si (contient(phrase_min, mot_cherche)) {
+            retourner vrai
+        }
+        i = i + 1
     }
-    si (entree == "Bonjour") {
-        imprimer("Salut !")
-    } sinon si (entree == "Comment ça va ?") {
-        imprimer("Je vais bien, merci !")
+    retourner faux
+}
+
+fonction choisir_reponse_aleatoire(liste_reponses) {
+    soit random_val = aleatoire()
+    soit index = entier(random_val * longueur(liste_reponses))
+    si (index >= longueur(liste_reponses)) {
+        index = longueur(liste_reponses) - 1
+    }
+    retourner liste_reponses[index]
+}
+
+fonction analyser_sentiment(phrase) {
+    soit mots_positifs = ["bien", "super", "génial", "parfait", "excellent", "cool", "top"]
+    soit mots_negatifs = ["mal", "triste", "nul", "horrible", "mauvais", "pire"]
+    
+    si (contient_mot_cle(phrase, mots_positifs)) {
+        retourner "positif"
+    }
+    si (contient_mot_cle(phrase, mots_negatifs)) {
+        retourner "négatif"
+    }
+    retourner "neutre"
+}
+
+fonction compter_mots(phrase) {
+    soit mots = diviser(phrase, " ")
+    retourner longueur(mots)
+}
+
+fonction generer_reponse_ia(phrase) {
+    soit donnees_entree = [[longueur(phrase), compter_mots(phrase)]]
+    
+    soit mini_reseau = reseau_neuronal([2, 3, 1], "relu")
+    
+    soit donnees_x = [[5, 1], [20, 4], [50, 10], [100, 20]]
+    soit donnees_y = [0, 0.3, 0.7, 1]
+    
+    soit modele = apprentissage(mini_reseau, donnees_x, donnees_y, 10)
+    
+    soit predictions = prediction(modele, donnees_entree)
+    soit complexite = predictions[0]
+    
+    si (complexite < 0.3) {
+        retourner "Je comprends. Pouvez-vous m'en dire plus ?"
+    } sinon si (complexite < 0.7) {
+        retourner "C'est intéressant ! J'analyse votre message..."
     } sinon {
-        imprimer("Je n'ai pas compris.")
+        retourner "Voilà une question complexe ! Laissez-moi réfléchir à cela."
     }
 }
+
+fonction traiter_commande(commande) {
+    soit cmd = minuscule(commande)
+    
+    si (cmd == "/stats") {
+        imprimer("Statistiques du bot:")
+        imprimer("- Version:", version)
+        imprimer("- Mots-clés connus:", longueur(salutations) + longueur(aurevoir))
+        imprimer("- Réponses disponibles:", longueur(reponses_salutations))
+        retourner vrai
+    }
+    
+    si (cmd == "/aide") {
+        imprimer("Commandes disponibles:")
+        imprimer("- /stats : Afficher les statistiques")
+        imprimer("- /aide : Afficher cette aide") 
+        imprimer("- /reset : Redémarrer la conversation")
+        imprimer("- /quitter : Quitter le chatbot")
+        retourner vrai
+    }
+    
+    si (cmd == "/reset") {
+        imprimer("Conversation redémarrée !")
+        retourner vrai
+    }
+    
+    si (cmd == "/quitter") {
+        retourner faux
+    }
+    
+    retourner nul
+}
+
+fonction reponse_intelligente(message) {
+    si (contient_mot_cle(message, salutations)) {
+        retourner choisir_reponse_aleatoire(reponses_salutations)
+    }
+    
+    si (contient_mot_cle(message, aurevoir)) {
+        retourner choisir_reponse_aleatoire(reponses_aurevoir)
+    }
+    
+    si (contient_mot_cle(message, questions_etat)) {
+        retourner choisir_reponse_aleatoire(reponses_etat)
+    }
+    
+    si (contient_mot_cle(message, questions_nom)) {
+        retourner "Je suis " + nom_bot + " version " + version + ", votre assistant IA en français !"
+    }
+    
+    si (contient_mot_cle(message, questions_aide)) {
+        retourner "Je peux discuter avec vous, répondre à vos questions, analyser vos messages ! Tapez /aide pour voir les commandes."
+    }
+    
+    soit sentiment = analyser_sentiment(message)
+    si (sentiment == "positif") {
+        retourner "Je sens une énergie positive dans votre message ! C'est formidable !"
+    }
+    si (sentiment == "négatif") {
+        retourner "Je perçois que vous pourriez avoir besoin de soutien. Je suis là pour vous écouter."
+    }
+    
+    si (contient(minuscule(message), "combien")) {
+        retourner "Pour les calculs, j'utilise mes circuits intégrés ! Donnez-moi l'opération exacte."
+    }
+    
+    retourner generer_reponse_ia(message)
+}
+
+imprimer("==================================================")
+imprimer("🤖 F-IA Assistant v2.0")
+imprimer("Intelligence Artificielle Conversationnelle")
+imprimer("==================================================")
+imprimer()
+imprimer("Bonjour ! Je suis votre assistant IA en français.")
+imprimer("Tapez /aide pour voir les commandes disponibles.")
+imprimer("Tapez 'quitter' ou /quitter pour terminer.")
+imprimer()
+
+soit compteur_messages = 0
+soit conversation_active = vrai
+
+tant_que (conversation_active) {
+    imprimer("Vous: ")
+    soit message_utilisateur = lire()
+    
+    compteur_messages = compteur_messages + 1
+    
+    si (contient(message_utilisateur, "/")) {
+        soit resultat_cmd = traiter_commande(message_utilisateur)
+        si (resultat_cmd == faux) {
+            conversation_active = faux
+        }
+    } sinon {
+        si (minuscule(message_utilisateur) == "quitter") {
+            conversation_active = faux
+        } sinon {
+            soit reponse = reponse_intelligente(message_utilisateur)
+            imprimer("F-IA Assistant: " + reponse)
+        }
+    }
+    
+    imprimer()
+}
+
+imprimer("📊 === STATISTIQUES DE CONVERSATION ===")
+imprimer("Nombre de messages échangés:", compteur_messages)
+imprimer("Merci pour cette conversation enrichissante !")
+imprimer()
+imprimer("Merci d'avoir utilisé F-IA Assistant ! À bientôt ! 👋")

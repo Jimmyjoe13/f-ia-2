@@ -2,6 +2,7 @@
 from errors import RuntimeError, ReturnException
 import builtin
 import ia_module  # Module IA maintenant activé
+from builtin import _ArretProgramme
 from fia_ast import Identifiant, AccesIndex, AccesDictionnaire, ExpressionStatement, Noeud
 
 class VisiteurInterpretation:
@@ -25,8 +26,12 @@ class VisiteurInterpretation:
 
     def visiter_programme(self, programme):
         resultat = None
-        for instruction in programme.instructions:
-            resultat = self.executer(instruction)
+        try:
+            for instruction in programme.instructions:
+                resultat = self.executer(instruction)
+        except _ArretProgramme:
+            # Arrêt contrôlé du programme (arreter())
+            return None
         return resultat
 
     def visiter_declaration_variable(self, decl):
@@ -89,13 +94,23 @@ class VisiteurInterpretation:
         gauche = self.executer(expr_bin.gauche)
         droite = self.executer(expr_bin.droite)
 
-        # Conversion des types si nécessaire
+        op = expr_bin.operateur
+        
+        # Gestion spéciale pour la concaténation de chaînes
+        if op == '+':
+            # Si l'un des opérandes est une chaîne, convertir l'autre en chaîne
+            if isinstance(gauche, str) or isinstance(droite, str):
+                return str(gauche) + str(droite)
+            # Sinon, conversion des types si nécessaire pour addition numérique
+            gauche = self.convertir_si_nombre(gauche)
+            droite = self.convertir_si_nombre(droite)
+            return gauche + droite
+        
+        # Pour tous les autres opérateurs, conversion standard
         gauche = self.convertir_si_nombre(gauche)
         droite = self.convertir_si_nombre(droite)
 
-        op = expr_bin.operateur
-        if op == '+': return gauche + droite
-        elif op == '-': return gauche - droite
+        if op == '-': return gauche - droite
         elif op == '*': return gauche * droite
         elif op == '/':
             if droite == 0:
@@ -149,7 +164,10 @@ class VisiteurInterpretation:
         if nom_fonction in self.fonctions_integrees:
             fonction = self.fonctions_integrees[nom_fonction]
             try:
-                return fonction(*args_convertis)  # Utiliser args_convertis
+                return fonction(*args_convertis)
+            except _ArretProgramme:
+                # Arrêt demandé par l'utilisateur via arreter()
+                raise _ArretProgramme()
             except TypeError as e:
                 raise RuntimeError(f"Erreur d'exécution lors de l'appel de '{nom_fonction}': {e}")
             except Exception as e:
@@ -167,18 +185,19 @@ class VisiteurInterpretation:
             for param, arg in zip(params, args):
                 contexte_local[param] = arg
             # Sauvegarder le contexte global
-            ancien_contexte = self.contextes
+            ancien_contexte = self.contextes[:]
             # Remplacer la pile par un nouveau contexte local
-            self.contextes = [contexte_local]
+            self.contextes = [ancien_contexte[0].copy(), contexte_local]  # Garder global + ajouter local
             resultat_fonction = None
             try:
-                for stmt in corps:
-                    self.executer(stmt)
+                # Exécuter le bloc directement
+                resultat_fonction = self.executer(corps)
             except ReturnException as e:
                 # Récupérer la valeur de retour si 'retourner' est exécuté
                 resultat_fonction = e.value
-            # Restaurer le contexte global
-            self.contextes = ancien_contexte
+            finally:
+                # Restaurer le contexte global
+                self.contextes = ancien_contexte
             return resultat_fonction
         else:
             raise RuntimeError(f"Erreur d'exécution: fonction '{nom_fonction}' non définie")
@@ -242,8 +261,11 @@ class VisiteurInterpretation:
             print("🛑 Sécurité: boucle arrêtée après 50 itérations")
 
     def visiter_bloc(self, bloc):
-        # Créer un nouveau contexte pour ce bloc
-        self.contextes.append({})  # Nouveau contexte local
+        # Créer un nouveau contexte pour ce bloc seulement si nécessaire
+        nouveau_contexte_cree = False
+        if len(self.contextes) == 1:  # Seulement contexte global
+            self.contextes.append({})  # Nouveau contexte local
+            nouveau_contexte_cree = True
         
         resultat = None
         try:
@@ -251,9 +273,10 @@ class VisiteurInterpretation:
                 resultat = self.executer(instruction)
         finally:
             # Fusionner les variables du bloc avec le contexte parent avant de le supprimer
-            contexte_bloc = self.contextes.pop()  # Retirer le contexte du bloc
-            if self.contextes:  # S'assurer qu'il reste un contexte parent
-                self.contextes[-1].update(contexte_bloc)  # Fusionner avec le parent
+            if nouveau_contexte_cree and len(self.contextes) > 1:
+                contexte_bloc = self.contextes.pop()  # Retirer le contexte du bloc
+                if self.contextes:  # S'assurer qu'il reste un contexte parent
+                    self.contextes[-1].update(contexte_bloc)  # Fusionner avec le parent
         
         return resultat
 

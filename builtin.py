@@ -1,216 +1,220 @@
 # builtin.py
-import math
-import random
 from errors import RuntimeError
 
-def imprimer(*args):
+def _imprimer(*args):
+    # Supporte l'affichage de plusieurs arguments comme print
     print(*args)
 
-def longueur(objet):
-    if not isinstance(objet, (str, list, dict)):
-        raise RuntimeError("Erreur d'exécution: 'longueur' attend une chaîne, une liste ou un dictionnaire")
-    return len(objet)
+def _longueur(obj):
+    try:
+        return len(obj)
+    except Exception:
+        raise RuntimeError("Erreur d'exécution: 'longueur' attend une liste, chaîne ou dictionnaire")
 
-def arrondir(nombre, decimales=0):
-    if not isinstance(nombre, (int, float)):
-        raise RuntimeError("Erreur d'exécution: 'arrondir' attend un nombre")
-    return round(nombre, decimales)
+def _arrondir(nombre, decimales=0):
+    try:
+        return round(float(nombre), int(decimales))
+    except Exception:
+        raise RuntimeError("Erreur d'exécution: 'arrondir' attend (nombre, décimales)")
 
-def aleatoire():
+def _aleatoire():
+    import random
     return random.random()
 
-def racine(nombre):
-    if not isinstance(nombre, (int, float)) or nombre < 0:
-        raise RuntimeError("Erreur d'exécution: 'racine' attend un nombre positif")
-    return math.sqrt(nombre)
+def _racine(nombre):
+    import math
+    try:
+        return math.sqrt(float(nombre))
+    except Exception:
+        raise RuntimeError("Erreur d'exécution: 'racine' attend un nombre")
 
-def puissance(base, exposant):
-    if not isinstance(base, (int, float)) or not isinstance(exposant, (int, float)):
-        raise RuntimeError("Erreur d'exécution: 'puissance' attend des nombres")
-    return base ** exposant
+def _puissance(base, exposant):
+    try:
+        return float(base) ** float(exposant)
+    except Exception:
+        raise RuntimeError("Erreur d'exécution: 'puissance' attend (base, exposant)")
 
-def entier(valeur):
+def _entier(valeur):
+    try:
+        if isinstance(valeur, bool):
+            return int(valeur)
+    except Exception:
+        pass
     try:
         return int(valeur)
-    except (ValueError, TypeError):
-        raise RuntimeError(f"Erreur d'exécution: impossible de convertir '{valeur}' en entier")
+    except Exception:
+        raise RuntimeError("Erreur d'exécution: 'entier' ne peut pas convertir cette valeur")
 
-def chaine(valeur):
-    return str(valeur)
+def _chaine(valeur):
+    try:
+        return str(valeur)
+    except Exception:
+        raise RuntimeError("Erreur d'exécution: 'chaine' ne peut pas convertir cette valeur")
 
-# === NOUVELLES FONCTIONS DICTIONNAIRES ===
-
-def cles(dictionnaire):
-    """Retourne la liste des clés d'un dictionnaire."""
-    if not isinstance(dictionnaire, dict):
+# Dictionnaires
+def _cles(d):
+    if not isinstance(d, dict):
         raise RuntimeError("Erreur d'exécution: 'cles' attend un dictionnaire")
-    return list(dictionnaire.keys())
+    return list(d.keys())
 
-def valeurs(dictionnaire):
-    """Retourne la liste des valeurs d'un dictionnaire."""
-    if not isinstance(dictionnaire, dict):
+def _valeurs(d):
+    if not isinstance(d, dict):
         raise RuntimeError("Erreur d'exécution: 'valeurs' attend un dictionnaire")
-    return list(dictionnaire.values())
+    return list(d.values())
 
-def contient_cle(dictionnaire, cle):
-    """Vérifie si une clé existe dans le dictionnaire."""
-    if not isinstance(dictionnaire, dict):
+def _contient_cle(d, cle):
+    if not isinstance(d, dict):
         raise RuntimeError("Erreur d'exécution: 'contient_cle' attend un dictionnaire")
-    return cle in dictionnaire
+    return cle in d
 
-def supprimer_cle(dictionnaire, cle):
-    """Supprime une clé du dictionnaire."""
-    if not isinstance(dictionnaire, dict):
+def _supprimer_cle(d, cle):
+    if not isinstance(d, dict):
         raise RuntimeError("Erreur d'exécution: 'supprimer_cle' attend un dictionnaire")
-    if cle not in dictionnaire:
-        raise RuntimeError(f"Erreur d'exécution: clé '{cle}' non trouvée dans le dictionnaire")
-    del dictionnaire[cle]
-    return dictionnaire
+    d.pop(cle, None)
+    return d
 
-def fusionner(dict1, dict2):
-    """Fusionne deux dictionnaires."""
-    if not isinstance(dict1, dict) or not isinstance(dict2, dict):
+def _fusionner(d1, d2):
+    if not isinstance(d1, dict) or not isinstance(d2, dict):
         raise RuntimeError("Erreur d'exécution: 'fusionner' attend deux dictionnaires")
-    resultat = dict1.copy()
-    resultat.update(dict2)
-    return resultat
+    r = d1.copy()
+    r.update(d2)
+    return r
 
-def vider(dictionnaire):
-    """Vide un dictionnaire."""
-    if not isinstance(dictionnaire, dict):
+def _vider(d):
+    if not isinstance(d, dict):
         raise RuntimeError("Erreur d'exécution: 'vider' attend un dictionnaire")
-    dictionnaire.clear()
-    return dictionnaire
+    d.clear()
+    return d
 
-# === NOUVELLES FONCTIONS LISTES (CORRIGÉES) ===
-
-def ajouter(liste, element):
-    """Ajoute un élément à la fin d'une liste."""
-    if not isinstance(liste, list):
+# Listes
+def _ajouter(l, e):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'ajouter' attend une liste")
-    liste.append(element)
-    return liste  # Important : retourner la liste modifiée
+    l.append(e)
+    return l
 
-def retirer(liste, index):
-    """Retire un élément d'une liste par son index."""
-    if not isinstance(liste, list):
+def _retirer(l, index):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'retirer' attend une liste")
-    if not isinstance(index, int):
-        raise RuntimeError("Erreur d'exécution: 'retirer' attend un index entier")
-    if index < 0 or index >= len(liste):
-        raise RuntimeError("Erreur d'exécution: index hors limites")
-    return liste.pop(index)
+    if not isinstance(index, int) or index < 0 or index >= len(l):
+        raise RuntimeError("Erreur d'exécution: index invalide dans 'retirer'")
+    l.pop(index)
+    return l
 
-def trier(liste):
-    """Trie une liste."""
-    if not isinstance(liste, list):
+def _trier(l):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'trier' attend une liste")
-    liste.sort()
-    return liste  # Important : retourner la liste modifiée
+    try:
+        l.sort()
+    except Exception:
+        raise RuntimeError("Erreur d'exécution: la liste ne peut pas être triée")
+    return l
 
-def inverser(liste):
-    """Inverse l'ordre des éléments d'une liste."""
-    if not isinstance(liste, list):
+def _inverser(l):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'inverser' attend une liste")
-    liste.reverse()
-    return liste
+    l.reverse()
+    return l
 
-def copier(liste):
-    """Crée une copie d'une liste."""
-    if not isinstance(liste, list):
+def _copier(l):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'copier' attend une liste")
-    return liste.copy()
+    return l.copy()
 
-def contient(liste, element):
-    """Vérifie si un élément est dans une liste."""
-    if not isinstance(liste, list):
+def _contient(l, e):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'contient' attend une liste")
-    return element in liste
+    return e in l
 
-def index_de(liste, element):
-    """Retourne l'index d'un élément dans une liste."""
-    if not isinstance(liste, list):
+def _index_de(l, e):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'index_de' attend une liste")
     try:
-        return liste.index(element)
+        return l.index(e)
     except ValueError:
-        raise RuntimeError(f"Erreur d'exécution: élément '{element}' non trouvé dans la liste")
+        return -1
 
-def compter(liste, element):
-    """Compte le nombre d'occurrences d'un élément dans une liste."""
-    if not isinstance(liste, list):
+def _compter(l, e):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'compter' attend une liste")
-    return liste.count(element)
+    return l.count(e)
 
-# === NOUVELLES FONCTIONS CHAÎNES ===
-
-def majuscule(texte):
-    """Convertit une chaîne en majuscules."""
-    if not isinstance(texte, str):
+# Chaînes
+def _majuscule(t):
+    if not isinstance(t, str):
         raise RuntimeError("Erreur d'exécution: 'majuscule' attend une chaîne")
-    return texte.upper()
+    return t.upper()
 
-def minuscule(texte):
-    """Convertit une chaîne en minuscules."""
-    if not isinstance(texte, str):
+def _minuscule(t):
+    if not isinstance(t, str):
         raise RuntimeError("Erreur d'exécution: 'minuscule' attend une chaîne")
-    return texte.lower()
+    return t.lower()
 
-def remplacer(texte, ancien, nouveau):
-    """Remplace toutes les occurrences d'une sous-chaîne."""
-    if not isinstance(texte, str):
+def _remplacer(t, ancien, nouveau):
+    if not isinstance(t, str):
         raise RuntimeError("Erreur d'exécution: 'remplacer' attend une chaîne")
-    return texte.replace(ancien, nouveau)
+    return t.replace(str(ancien), str(nouveau))
 
-def diviser(texte, separateur=" "):
-    """Divise une chaîne en liste selon un séparateur."""
-    if not isinstance(texte, str):
+def _diviser(t, sep):
+    if not isinstance(t, str):
         raise RuntimeError("Erreur d'exécution: 'diviser' attend une chaîne")
-    return texte.split(separateur)
+    return t.split(str(sep))
 
-def joindre(liste, separateur=""):
-    """Joint les éléments d'une liste en une chaîne."""
-    if not isinstance(liste, list):
+def _joindre(l, sep):
+    if not isinstance(l, list):
         raise RuntimeError("Erreur d'exécution: 'joindre' attend une liste")
-    try:
-        return separateur.join(str(item) for item in liste)
-    except Exception:
-        raise RuntimeError("Erreur d'exécution: impossible de joindre les éléments")
+    return str(sep).join(str(x) for x in l)
 
-# Dictionnaire des fonctions intégrées
+# I/O utilisateur
+def _lire():
+    try:
+        return input()
+    except EOFError:
+        return ""
+    except Exception as e:
+        raise RuntimeError(f"Erreur d'exécution: 'lire' a échoué: {e}")
+
+# Arrêt contrôlé
+class _ArretProgramme(Exception):
+    pass
+
+def _arreter():
+    # Cette fonction peut être interceptée par l'interpréteur si besoin
+    raise _ArretProgramme()
+
+# Table des fonctions intégrées exposées au langage F-IA
 FONCTIONS_INTEGREES = {
-    # Fonctions de base
-    'imprimer': imprimer,
-    'longueur': longueur,
-    'arrondir': arrondir,
-    'aleatoire': aleatoire,
-    'racine': racine,
-    'puissance': puissance,
-    'entier': entier,
-    'chaine': chaine,
-    
-    # Fonctions dictionnaires
-    'cles': cles,
-    'valeurs': valeurs,
-    'contient_cle': contient_cle,
-    'supprimer_cle': supprimer_cle,
-    'fusionner': fusionner,
-    'vider': vider,
-    
-    # Fonctions listes
-    'ajouter': ajouter,
-    'retirer': retirer,
-    'trier': trier,
-    'inverser': inverser,
-    'copier': copier,
-    'contient': contient,
-    'index_de': index_de,
-    'compter': compter,
-    
-    # Fonctions chaînes
-    'majuscule': majuscule,
-    'minuscule': minuscule,
-    'remplacer': remplacer,
-    'diviser': diviser,
-    'joindre': joindre,
+    "imprimer": _imprimer,
+    "longueur": _longueur,
+    "arrondir": _arrondir,
+    "aleatoire": _aleatoire,
+    "racine": _racine,
+    "puissance": _puissance,
+    "entier": _entier,
+    "chaine": _chaine,
+
+    "cles": _cles,
+    "valeurs": _valeurs,
+    "contient_cle": _contient_cle,
+    "supprimer_cle": _supprimer_cle,
+    "fusionner": _fusionner,
+    "vider": _vider,
+
+    "ajouter": _ajouter,
+    "retirer": _retirer,
+    "trier": _trier,
+    "inverser": _inverser,
+    "copier": _copier,
+    "contient": _contient,
+    "index_de": _index_de,
+    "compter": _compter,
+
+    "majuscule": _majuscule,
+    "minuscule": _minuscule,
+    "remplacer": _remplacer,
+    "diviser": _diviser,
+    "joindre": _joindre,
+
+    "lire": _lire,
+    "arreter": _arreter,
 }

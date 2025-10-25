@@ -1,0 +1,171 @@
+soit nom_bot = "F-IA Assistant"
+soit version = "1.0"
+
+soit mots_salutations = ["bonjour", "salut", "hello", "hey", "coucou"]
+soit mots_aurevoir = ["au revoir", "bye", "tchao", "adieu"]
+soit mots_etat = ["ça va", "comment ça va", "comment allez vous"]
+soit mots_nom = ["nom", "qui es-tu", "comment tu t'appelles"]
+
+fonction chercher_mot_dans_phrase(phrase, mot_a_chercher) {
+    soit phrase_min = minuscule(phrase)
+    soit mot_min = minuscule(mot_a_chercher)
+    soit mots_phrase = diviser(phrase_min, " ")
+    soit i = 0
+    tant_que (i < longueur(mots_phrase)) {
+        soit mot_courant = mots_phrase[i]
+        si (mot_courant == mot_min) {
+            retourner vrai
+        }
+        i = i + 1
+    }
+    retourner faux
+}
+
+fonction chercher_mots_dans_phrase(phrase, liste_mots) {
+    soit i = 0
+    tant_que (i < longueur(liste_mots)) {
+        si (chercher_mot_dans_phrase(phrase, liste_mots[i])) {
+            retourner vrai
+        }
+        i = i + 1
+    }
+    retourner faux
+}
+
+fonction analyser_sentiment_simple(phrase) {
+    soit mots_positifs = ["bien", "super", "génial", "parfait", "cool", "top", "excellent", "content", "heureux"]
+    soit mots_negatifs = ["mal", "triste", "nul", "horrible", "pire", "mauvais", "malheureux"]
+    
+    si (chercher_mots_dans_phrase(phrase, mots_positifs)) {
+        retourner "positif"
+    }
+    si (chercher_mots_dans_phrase(phrase, mots_negatifs)) {
+        retourner "négatif"
+    }
+    retourner "neutre"
+}
+
+fonction traiter_commande(cmd) {
+    soit commande = minuscule(cmd)
+    
+    si (commande == "/aide" ou commande == "/help") {
+        imprimer("🤖 === AIDE F-IA ASSISTANT ===")
+        imprimer("Commandes disponibles :")
+        imprimer("- /aide : Afficher cette aide")
+        imprimer("- /stats : Statistiques du bot")
+        imprimer("- /version : Version du bot")
+        imprimer("Vous pouvez aussi me parler normalement !")
+        retourner vrai
+    }
+    
+    si (commande == "/stats") {
+        imprimer("📊 === STATISTIQUES ===")
+        imprimer("Nom :", nom_bot)
+        imprimer("Version :", version)
+        imprimer("Mots-clés reconnus : 20+")
+        retourner vrai
+    }
+    
+    si (commande == "/version") {
+        imprimer("🔧 Version :", nom_bot, "v" + version)
+        retourner vrai
+    }
+    
+    retourner faux
+}
+
+fonction generer_reponse(message) {
+    si (chercher_mots_dans_phrase(message, mots_salutations)) {
+        retourner "Bonjour ! Comment puis-je vous aider aujourd'hui ?"
+    }
+    
+    si (chercher_mots_dans_phrase(message, mots_aurevoir)) {
+        retourner "Au revoir ! Merci pour cette conversation !"
+    }
+    
+    si (chercher_mots_dans_phrase(message, mots_etat)) {
+        retourner "Je vais très bien, merci ! Mes circuits fonctionnent parfaitement. Et vous ?"
+    }
+    
+    si (chercher_mot_dans_phrase(message, "qui") ou chercher_mot_dans_phrase(message, "nom")) {
+        retourner "Je suis " + nom_bot + " version " + version + ", votre assistant IA en français !"
+    }
+    
+    si (chercher_mot_dans_phrase(message, "aide")) {
+        retourner "Je peux discuter avec vous et répondre à vos questions ! Tapez /aide pour plus d'infos."
+    }
+    
+    si (chercher_mot_dans_phrase(message, "merci")) {
+        retourner "De rien ! Je suis ravi de pouvoir vous aider !"
+    }
+    
+    si (chercher_mot_dans_phrase(message, "time") ou chercher_mot_dans_phrase(message, "heure")) {
+        retourner "Je n'ai pas accès à l'horloge, mais je peux discuter avec vous !"
+    }
+    
+    soit sentiment = analyser_sentiment_simple(message)
+    si (sentiment == "positif") {
+        retourner "Je sens de la joie dans votre message ! C'est formidable ! 😊"
+    }
+    si (sentiment == "négatif") {
+        retourner "Je perçois que vous n'allez peut-être pas bien. Je suis là pour vous écouter. 🤗"
+    }
+    
+    retourner "Intéressant ! Pouvez-vous m'en dire plus ? Je suis curieux d'apprendre !"
+}
+
+fonction commencer_conversation() {
+    imprimer("==================================================")
+    imprimer("🤖 " + nom_bot + " v" + version)
+    imprimer("Assistant IA Conversationnel en Français")
+    imprimer("==================================================")
+    imprimer()
+    imprimer("Bonjour ! Je suis votre assistant IA personnel.")
+    imprimer("💬 Parlez-moi naturellement ou tapez /aide pour l'aide")
+    imprimer("🚪 Tapez 'quitter' pour sortir")
+    imprimer()
+}
+
+fonction est_commande(message) {
+    soit longueur_msg = longueur(message)
+    si (longueur_msg > 0) {
+        soit premier_mot = diviser(message, " ")[0]
+        soit premier_char = diviser(premier_mot, "/")
+        si (longueur(premier_char) > 1) {
+            retourner vrai
+        }
+    }
+    retourner faux
+}
+
+commencer_conversation()
+
+soit compteur_messages = 0
+soit conversation_active = vrai
+
+tant_que (conversation_active) {
+    imprimer("Vous 💬 : ")
+    soit message_utilisateur = lire()
+    
+    compteur_messages = compteur_messages + 1
+    
+    si (minuscule(message_utilisateur) == "quitter" ou minuscule(message_utilisateur) == "exit") {
+        conversation_active = faux
+        imprimer()
+        imprimer("👋 Au revoir ! Merci d'avoir utilisé " + nom_bot + " !")
+        imprimer("📊 Messages échangés :")
+        imprimer(compteur_messages)
+        imprimer("À bientôt ! 🚀")
+    } sinon {
+        si (est_commande(message_utilisateur)) {
+            soit commande_ok = traiter_commande(message_utilisateur)
+            si (commande_ok == faux) {
+                imprimer("❌ Commande inconnue. Tapez /aide pour voir les commandes.")
+            }
+        } sinon {
+            soit reponse_bot = generer_reponse(message_utilisateur)
+            imprimer("🤖 " + nom_bot + " : " + reponse_bot)
+        }
+        imprimer()
+    }
+}
