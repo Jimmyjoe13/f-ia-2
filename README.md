@@ -9,8 +9,11 @@
 - **Dictionnaires natifs** avec accès par clé
 - **Pipeline IA complet** intégré
 - **REPL interactif** avec debug détaillé
-- **Gestion d'erreurs avancée** avec localisation
-- **23 fonctions intégrées** pour manipulation de données
+- **Gestion d'erreurs avancée** avec localisation ligne/colonne
+- **25+ fonctions intégrées** pour manipulation de données
+- **🆕 Chatbot conversationnel** - Exemple d'application complète inclus
+- **🆕 Support "sinon si"** - Syntaxe conditionnelle enrichie
+- **🆕 Interaction utilisateur** - Fonctions `lire()` et `arreter()`
 
 ## 📦 Installation
 
@@ -32,6 +35,11 @@ python main.py
 python main.py mon_script.fia
 ```
 
+### 🤖 Démo Chatbot (NOUVEAU !)
+```bash
+python main.py exemples/chatbot_simple.fia
+```
+
 ## 📖 Syntaxe de base
 
 ### Variables et types
@@ -51,12 +59,14 @@ utilisateur["age"] = 26             # Modification
 utilisateur["profession"] = "Dev"   # Ajout de clé
 ```
 
-### Conditions
+### Conditions avec "sinon si" 🆕
 ```fia
 si (âge >= 18) {
     imprimer("Majeur")
+} sinon si (âge >= 13) {
+    imprimer("Adolescent")
 } sinon {
-    imprimer("Mineur")
+    imprimer("Enfant")
 }
 ```
 
@@ -91,7 +101,50 @@ soit moyenne = calculer_moyenne([15, 18, 12, 20])
 imprimer("Moyenne:", moyenne)
 ```
 
-## 🤖 Pipeline IA intégré
+## 🤖 Applications pratiques
+
+### Chatbot conversationnel intelligent 🆕
+
+F-IA permet de créer facilement des chatbots conversationnels :
+
+```fia
+fonction generer_reponse(message) {
+    soit message_lower = minuscule(message)
+    
+    si (contient_mot(message_lower, "bonjour")) {
+        retourner "Bonjour ! Comment puis-je vous aider aujourd'hui ?"
+    } sinon si (contient_mot(message_lower, "merci")) {
+        retourner "De rien ! Je suis ravi de pouvoir vous aider !"
+    } sinon si (contient_mot(message_lower, "content")) {
+        retourner "Je sens de la joie dans votre message ! C'est formidable ! 😊"
+    } sinon {
+        retourner "Intéressant ! Pouvez-vous m'en dire plus ? Je suis curieux d'apprendre !"
+    }
+}
+
+# Boucle principale du chatbot
+soit nom_bot = "F-IA Assistant"
+soit compteur_messages = 0
+
+imprimer("🤖", nom_bot, "v1.0")
+imprimer("💬 Parlez-moi naturellement ou tapez /aide pour l'aide")
+
+tant_que (vrai) {
+    imprimer("Vous 💬 :")
+    soit message_utilisateur = lire()
+    
+    si (message_utilisateur == "quitter") {
+        imprimer("👋 Au revoir ! Merci d'avoir utilisé", nom_bot, "!")
+        arreter()
+    }
+    
+    soit reponse_bot = generer_reponse(message_utilisateur)
+    imprimer("🤖", nom_bot, ":", reponse_bot)
+    compteur_messages = compteur_messages + 1
+}
+```
+
+### Pipeline IA intégré
 
 ```fia
 # Création d'un réseau de neurones
@@ -122,6 +175,10 @@ imprimer("Précision:", resultats["precision"])
 - `puissance(base, exposant)` - Puissance
 - `entier(valeur)` - Conversion en entier
 - `chaine(valeur)` - Conversion en chaîne
+
+### Fonctions d'interaction 🆕
+- `lire()` - Lire une ligne depuis le clavier
+- `arreter()` - Arrêter l'exécution proprement
 
 ### Fonctions dictionnaires
 - `cles(dict)` - Liste des clés
@@ -203,6 +260,46 @@ soit predictions = prediction(modele_final, test_x)
 imprimer("Prédictions XOR:", predictions)
 ```
 
+### Chatbot avec système de commandes 🆕
+```fia
+fonction est_commande(message) {
+    soit premier_mot = diviser(message, " ")[0]
+    soit parties = diviser(premier_mot, "/")
+    retourner longueur(parties) > 1
+}
+
+fonction traiter_commande(commande) {
+    si (commande == "/aide") {
+        imprimer("🤖 === AIDE F-IA ASSISTANT ===")
+        imprimer("Commandes disponibles :")
+        imprimer("/aide : Afficher cette aide")
+        imprimer("/stats : Statistiques du bot")
+        imprimer("Vous pouvez aussi me parler normalement !")
+    } sinon si (commande == "/stats") {
+        imprimer("📊 === STATISTIQUES ===")
+        imprimer("Nom : F-IA Assistant")
+        imprimer("Version : 1.0")
+        imprimer("Mots-clés reconnus : 20+")
+    }
+}
+
+# Application complète avec détection de commandes
+tant_que (vrai) {
+    soit message = lire()
+    
+    si (message == "quitter") {
+        arreter()
+    }
+    
+    si (est_commande(message)) {
+        traiter_commande(message)
+    } sinon {
+        soit reponse = generer_reponse(message)
+        imprimer("🤖 F-IA Assistant :", reponse)
+    }
+}
+```
+
 ## 🏗️ Architecture technique
 
 F-IA est implémenté avec une architecture modulaire :
@@ -213,15 +310,28 @@ F-IA est implémenté avec une architecture modulaire :
 - **Fonctions intégrées** (`builtin.py`) - Bibliothèque standard
 - **Module IA** (`ia_module.py`) - Fonctions d'intelligence artificielle
 - **REPL** (`repl.py`) - Interface interactive
+- **Gestion d'erreurs** (`errors.py`) - Système d'erreurs enrichi
 
 ## 🚀 Fonctionnalités avancées
 
 - **Portée des variables** correcte avec pile de contextes
-- **Gestion d'erreurs** avec ligne/colonne/fichier
+- **Gestion d'erreurs enrichie** avec ligne/colonne/fichier 🆕
 - **Types de données** : entiers, flottants, chaînes, booléens, listes, dictionnaires
 - **Opérateurs** : arithmétiques, comparaison, logiques, unaires
 - **Accès mixte** : listes par index `[0]`, dictionnaires par clé `["nom"]`
 - **Debugging intégré** : tokenisation et AST visibles dans le REPL
+- **Syntaxe conditionnelle** : support complet de `sinon si` 🆕
+- **Interaction utilisateur** : entrée clavier et arrêt contrôlé 🆕
+
+## 🎮 Applications réalisables
+
+Avec F-IA, vous pouvez créer :
+- **🤖 Chatbots conversationnels** - Assistants virtuels intelligents
+- **📊 Analyseurs de données** - Traitement et visualisation
+- **🧠 Modèles d'IA** - Réseaux de neurones simples
+- **🎯 Applications interactives** - Jeux, quizz, outils pédagogiques
+- **📝 Outils de traitement de texte** - Analyse et transformation
+- **🔢 Calculateurs avancés** - Statistiques et mathématiques
 
 ## 🐛 Signaler un bug
 
@@ -246,7 +356,14 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 ## 🎯 Roadmap
 
-### Prochaines fonctionnalités
+### ✅ Réalisé récemment
+- [x] **Support "sinon si"** - Syntaxe conditionnelle enrichie
+- [x] **Fonctions d'interaction** - `lire()` et `arreter()`
+- [x] **Gestion d'erreurs avancée** - Messages avec ligne/colonne
+- [x] **Chatbot fonctionnel** - Exemple d'application complète
+- [x] **Correction bugs critiques** - ParseError et itération Bloc
+
+### 🚧 Prochaines fonctionnalités
 - [ ] Support des commentaires `# commentaire`
 - [ ] Opérateurs d'assignation `+=`, `-=`, `*=`, `/=`
 - [ ] Boucle `pour...dans` : `pour element dans liste`
@@ -254,14 +371,18 @@ Les contributions sont les bienvenues ! Pour contribuer :
 - [ ] Système de modules et imports
 - [ ] Intégration NumPy/TensorFlow réelle
 - [ ] Gestionnaire de paquets
+- [ ] Plus d'exemples de chatbots avancés
 
-### Améliorations techniques
+### 🔧 Améliorations techniques
 - [ ] Compilation vers bytecode
 - [ ] Optimisations de performance
 - [ ] Language Server Protocol (LSP)
 - [ ] Extension VSCode
 - [ ] Documentation interactive
+- [ ] Tests automatisés
 
 ---
 
-**F-IA v0.2** - Créé avec ❤️ pour démocratiser l'IA en français
+**F-IA v0.3** - Créé avec ❤️ pour démocratiser l'IA en français
+
+🏆 **Nouveau :** Chatbot conversationnel fonctionnel inclus ! Testez dès maintenant votre première application d'IA conversationnelle en français.
