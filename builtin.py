@@ -182,8 +182,53 @@ def _arreter():
     # Cette fonction peut être interceptée par l'interpréteur si besoin
     raise _ArretProgramme()
 
+# === NOUVELLES FONCTIONS IA ===
+# Import avec gestion d'erreur pour les dépendances IA
+def _safe_import_ai():
+    """Import sécurisé du module IA"""
+    try:
+        from ai_integration import (
+            _appeler_ia, _lister_plateformes_ia, _lister_modeles_ia, 
+            _generer_reponse_bot, _verifier_config_ia
+        )
+        return {
+            'appeler_ia': _appeler_ia,
+            'lister_plateformes_ia': _lister_plateformes_ia,
+            'lister_modeles_ia': _lister_modeles_ia,
+            'generer_reponse_bot': _generer_reponse_bot,
+            'verifier_config_ia': _verifier_config_ia
+        }
+    except ImportError as e:
+        # Si les dépendances IA ne sont pas installées
+        def _ia_non_disponible(*args, **kwargs):
+            raise RuntimeError("Fonctions IA non disponibles. Installez les dépendances: pip install -r requirements.txt")
+        
+        return {
+            'appeler_ia': _ia_non_disponible,
+            'lister_plateformes_ia': _ia_non_disponible,
+            'lister_modeles_ia': _ia_non_disponible,
+            'generer_reponse_bot': _ia_non_disponible,
+            'verifier_config_ia': _ia_non_disponible
+        }
+    except Exception as e:
+        # Autres erreurs (clés API manquantes, etc.)
+        def _ia_erreur(*args, **kwargs):
+            raise RuntimeError(f"Erreur IA: {str(e)}")
+        
+        return {
+            'appeler_ia': _ia_erreur,
+            'lister_plateformes_ia': _ia_erreur,
+            'lister_modeles_ia': _ia_erreur,
+            'generer_reponse_bot': _ia_erreur,
+            'verifier_config_ia': _ia_erreur
+        }
+
+# Charger les fonctions IA
+_ai_functions = _safe_import_ai()
+
 # Table des fonctions intégrées exposées au langage F-IA
 FONCTIONS_INTEGREES = {
+    # Fonctions de base
     "imprimer": _imprimer,
     "longueur": _longueur,
     "arrondir": _arrondir,
@@ -193,6 +238,7 @@ FONCTIONS_INTEGREES = {
     "entier": _entier,
     "chaine": _chaine,
 
+    # Dictionnaires
     "cles": _cles,
     "valeurs": _valeurs,
     "contient_cle": _contient_cle,
@@ -200,6 +246,7 @@ FONCTIONS_INTEGREES = {
     "fusionner": _fusionner,
     "vider": _vider,
 
+    # Listes
     "ajouter": _ajouter,
     "retirer": _retirer,
     "trier": _trier,
@@ -209,12 +256,21 @@ FONCTIONS_INTEGREES = {
     "index_de": _index_de,
     "compter": _compter,
 
+    # Chaînes
     "majuscule": _majuscule,
     "minuscule": _minuscule,
     "remplacer": _remplacer,
     "diviser": _diviser,
     "joindre": _joindre,
 
+    # I/O utilisateur
     "lire": _lire,
     "arreter": _arreter,
+
+    # === FONCTIONS IA INTÉGRÉES ===
+    "appeler_ia": _ai_functions['appeler_ia'],
+    "lister_plateformes_ia": _ai_functions['lister_plateformes_ia'],
+    "lister_modeles_ia": _ai_functions['lister_modeles_ia'],
+    "generer_reponse_bot": _ai_functions['generer_reponse_bot'],
+    "verifier_config_ia": _ai_functions['verifier_config_ia'],
 }
