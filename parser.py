@@ -1,4 +1,3 @@
-# parser.py
 from lexer import Token
 from fia_ast import *
 from errors import ParseError
@@ -129,7 +128,11 @@ class ParserFIA:
         bloc_sinon = None
         if self.regarder_token().type == 'SINON':
             self.consommer_token('SINON')
-            bloc_sinon = self.analyser_bloc()
+            # Support de "sinon si (...) { }"
+            if self.regarder_token().type == 'SI':
+                bloc_sinon = Bloc([self.analyser_condition()])
+            else:
+                bloc_sinon = self.analyser_bloc()
         return Condition(condition, bloc_si, bloc_sinon)
 
     def analyser_boucle_tant_que(self):
@@ -356,18 +359,3 @@ class ParserFIA:
         
         self.consommer_token('ACCOLADE_FERMANTE') # '}'
         return Littéral(elements)
-
-# Exemple d'utilisation
-if __name__ == "__main__":
-    from lexer import LexerFIA
-    code = """
-    soit x = 10;
-    si (x > 5) {
-        imprimer("x est grand");
-    }
-    """
-    lexer = LexerFIA(code)
-    tokens = lexer.tokeniser()
-    parser = ParserFIA(tokens)
-    ast = parser.analyser()
-    print(ast.instructions)
