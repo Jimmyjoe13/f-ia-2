@@ -31,6 +31,16 @@ class Assignation(Noeud):
     def accepter(self, visiteur):
         return visiteur.visiter_assignation(self)
 
+# NOUVELLE CLASSE POUR LES ASSIGNATIONS COMPOSÉES
+class AssignationComposee(Noeud):
+    def __init__(self, cible, operateur, valeur):
+        self.cible = cible # Noeud (Variable ou IndexAccess)
+        self.operateur = operateur # str (+=, -=, *=, /=, %=)
+        self.valeur = valeur # Noeud expression
+
+    def accepter(self, visiteur):
+        return visiteur.visiter_assignation_composee(self)
+
 class ExpressionBinaire(Noeud):
     def __init__(self, gauche, operateur, droite):
         self.gauche = gauche # Noeud expression
@@ -96,6 +106,16 @@ class BouclePour(Noeud):
 
     def accepter(self, visiteur):
         return visiteur.visiter_boucle_pour(self)
+
+# NOUVELLE CLASSE POUR LA BOUCLE POUR...DANS
+class BouclePourDans(Noeud):
+    def __init__(self, variable, iterable, corps):
+        self.variable = variable # str (nom de la variable de boucle)
+        self.iterable = iterable # Noeud expression (liste, dictionnaire, chaîne)
+        self.corps = corps # Bloc
+
+    def accepter(self, visiteur):
+        return visiteur.visiter_boucle_pour_dans(self)
 
 class Bloc(Noeud):
     def __init__(self, instructions):

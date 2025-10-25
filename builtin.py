@@ -1,5 +1,10 @@
 # builtin.py
+import json
+import math
+import random
 from errors import RuntimeError
+
+
 
 def _imprimer(*args):
     # Supporte l'affichage de plusieurs arguments comme print

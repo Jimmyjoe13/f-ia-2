@@ -1,0 +1,42 @@
+# Test de la boucle pour...dans
+
+# Test avec une liste
+soit noms = ["Alice", "Bob", "Charlie"]
+imprimer("🔹 Itération sur une liste:")
+pour nom dans noms {
+    imprimer("  Bonjour", nom)
+}
+
+# Test avec un dictionnaire
+soit ages = {"Alice": 25, "Bob": 30, "Charlie": 35}
+imprimer("\n🔹 Itération sur un dictionnaire (clés):")
+pour personne dans ages {
+    imprimer("  ", personne, "a", ages[personne], "ans")
+}
+
+# Test avec une chaîne
+soit mot = "F-IA"
+imprimer("\n🔹 Itération sur une chaîne:")
+pour lettre dans mot {
+    imprimer("  Lettre:", lettre)
+}
+
+# Test des opérateurs d'assignation composés
+soit x = 10
+imprimer("\n🔹 Test opérateurs composés:")
+imprimer("  x initial:", x)
+
+x += 5
+imprimer("  x += 5 =>", x)
+
+x -= 3  
+imprimer("  x -= 3 =>", x)
+
+x *= 2
+imprimer("  x *= 2 =>", x)
+
+x /= 4
+imprimer("  x /= 4 =>", x)
+
+x %= 3
+imprimer("  x %= 3 =>", x)

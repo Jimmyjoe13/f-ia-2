@@ -26,6 +26,7 @@ class LexerFIA:
             'si': 'SI',
             'sinon': 'SINON',
             'pour': 'POUR',
+            'dans': 'DANS',  # NOUVEAU MOT-CLÉ
             'tant_que': 'TANT_QUE',
             'fonction': 'FONCTION',
             'retourner': 'RETOURNER',
@@ -76,6 +77,12 @@ class LexerFIA:
             ',': 'VIRGULE',
             ':': 'DEUX_POINTS',
             ';': 'POINT_VIRGULE',
+            # Nouveaux opérateurs d'assignation composés
+            '+=': 'PLUS_EGAL',
+            '-=': 'MOINS_EGAL',
+            '*=': 'FOIS_EGAL',
+            '/=': 'DIVISE_EGAL',
+            '%=': 'MODULO_EGAL',
         }
 
     def tokeniser(self):
@@ -129,7 +136,6 @@ class LexerFIA:
     # Token de fin
         self.tokens.append(Token('EOF', '', self.ligne, self.colonne))
         return self.tokens
-
 
     def est_accentue(self, char):
         return '\u00C0' <= char <= '\u017F'
@@ -200,6 +206,7 @@ class LexerFIA:
         self.tokens.append(Token('CHAINE', valeur, self.ligne, self.colonne_calcul(debut, lexeme)))
 
     def traiter_symbole(self):
+        # Vérifier d'abord les symboles à 2 caractères (+=, -=, etc.)
         deux_car = self.code[self.position:self.position+2]
         if deux_car in self.symboles:
             self.tokens.append(Token(self.symboles[deux_car], deux_car, self.ligne, self.colonne))
@@ -207,6 +214,7 @@ class LexerFIA:
             self.avancer()
             return True
 
+        # Puis les symboles à 1 caractère
         un_car = self.code[self.position]
         if un_car in self.symboles:
             self.tokens.append(Token(self.symboles[un_car], un_car, self.ligne, self.colonne))
@@ -225,9 +233,10 @@ if __name__ == "__main__":
     code = """
     # Ceci est un commentaire
     soit x = 10; // commentaire en fin de ligne
-    si (x > 5) {
-        imprimer("x est grand"); # encore un commentaire
+    pour nom dans noms {
+        imprimer(nom)
     }
+    x += 5  # Test opérateurs composés
     """
     lexer = LexerFIA(code)
     tokens = lexer.tokeniser()

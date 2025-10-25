@@ -1,0 +1,13 @@
+# test nouvelles fonction 
+
+soit x = 10
+x += 5
+imprimer("x:", x)
+x -= 2
+imprimer("x:", x)
+x *= 3
+imprimer("x:", x)
+x /= 13
+imprimer("x:", x)
+x %= 2
+imprimer("x:", x)

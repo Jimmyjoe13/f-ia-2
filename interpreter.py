@@ -67,6 +67,142 @@ class VisiteurInterpretation:
         else:
             raise RuntimeError(f"Erreur d'exécution: Cible d'assignation invalide")
 
+    def visiter_assignation_composee(self, assign_composee):
+        """Visite une assignation composée (+=, -=, *=, /=, %=)"""
+        # Récupérer la valeur actuelle de la variable
+        cible = assign_composee.cible
+        
+        if isinstance(cible, Identifiant):
+            # Assignation composée à une variable simple
+            if not self._variable_existe(cible.nom):
+                raise RuntimeError(f"Erreur d'exécution: variable '{cible.nom}' non déclarée avant assignation composée")
+            
+            valeur_actuelle = self._get_variable(cible.nom)
+            nouvelle_valeur = self.executer(assign_composee.valeur)
+            
+            # Appliquer l'opération selon le type d'assignation
+            if assign_composee.operateur == '+=':
+                # Gestion spéciale pour concaténation de chaînes
+                if isinstance(valeur_actuelle, str) or isinstance(nouvelle_valeur, str):
+                    resultat = str(valeur_actuelle) + str(nouvelle_valeur)
+                else:
+                    valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                    nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                    resultat = valeur_actuelle + nouvelle_valeur
+            elif assign_composee.operateur == '-=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle - nouvelle_valeur
+            elif assign_composee.operateur == '*=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle * nouvelle_valeur
+            elif assign_composee.operateur == '/=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                if nouvelle_valeur == 0:
+                    raise RuntimeError("Erreur d'exécution: Division par zéro dans assignation composée")
+                resultat = valeur_actuelle / nouvelle_valeur
+            elif assign_composee.operateur == '%=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle % nouvelle_valeur
+            else:
+                raise RuntimeError(f"Erreur d'exécution: Opérateur d'assignation composée inconnu: {assign_composee.operateur}")
+            
+            self._set_variable(cible.nom, resultat)
+            
+        elif isinstance(cible, AccesIndex):
+            # Assignation composée à un élément de liste
+            base_list = self.executer(cible.base)
+            index_value = self.executer(cible.index)
+            if not isinstance(base_list, list):
+                raise RuntimeError("Erreur d'exécution: L'opérande gauche de l'assignation composée par index doit être une liste")
+            if not isinstance(index_value, int):
+                raise RuntimeError("Erreur d'exécution: L'index doit être un entier")
+            if index_value < 0 or index_value >= len(base_list):
+                raise RuntimeError("Erreur d'exécution: Index de liste hors limites")
+            
+            valeur_actuelle = base_list[index_value]
+            nouvelle_valeur = self.executer(assign_composee.valeur)
+            
+            # Appliquer l'opération (code similaire au cas précédent)
+            if assign_composee.operateur == '+=':
+                if isinstance(valeur_actuelle, str) or isinstance(nouvelle_valeur, str):
+                    resultat = str(valeur_actuelle) + str(nouvelle_valeur)
+                else:
+                    valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                    nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                    resultat = valeur_actuelle + nouvelle_valeur
+            elif assign_composee.operateur == '-=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle - nouvelle_valeur
+            elif assign_composee.operateur == '*=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle * nouvelle_valeur
+            elif assign_composee.operateur == '/=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                if nouvelle_valeur == 0:
+                    raise RuntimeError("Erreur d'exécution: Division par zéro dans assignation composée")
+                resultat = valeur_actuelle / nouvelle_valeur
+            elif assign_composee.operateur == '%=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle % nouvelle_valeur
+            else:
+                raise RuntimeError(f"Erreur d'exécution: Opérateur d'assignation composée non supporté pour les listes: {assign_composee.operateur}")
+            
+            base_list[index_value] = resultat
+            
+        elif isinstance(cible, AccesDictionnaire):
+            # Assignation composée à une clé de dictionnaire  
+            base_dict = self.executer(cible.base)
+            cle_value = self.executer(cible.cle)
+            if not isinstance(base_dict, dict):
+                raise RuntimeError("Erreur d'exécution: L'opérande gauche de l'assignation composée par clé doit être un dictionnaire")
+            if cle_value not in base_dict:
+                raise RuntimeError(f"Erreur d'exécution: Clé '{cle_value}' non trouvée dans le dictionnaire")
+            
+            valeur_actuelle = base_dict[cle_value]
+            nouvelle_valeur = self.executer(assign_composee.valeur)
+            
+            # Appliquer l'opération (code similaire)
+            if assign_composee.operateur == '+=':
+                if isinstance(valeur_actuelle, str) or isinstance(nouvelle_valeur, str):
+                    resultat = str(valeur_actuelle) + str(nouvelle_valeur)
+                else:
+                    valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                    nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                    resultat = valeur_actuelle + nouvelle_valeur
+            elif assign_composee.operateur == '-=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle - nouvelle_valeur
+            elif assign_composee.operateur == '*=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle * nouvelle_valeur
+            elif assign_composee.operateur == '/=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                if nouvelle_valeur == 0:
+                    raise RuntimeError("Erreur d'exécution: Division par zéro dans assignation composée")
+                resultat = valeur_actuelle / nouvelle_valeur
+            elif assign_composee.operateur == '%=':
+                valeur_actuelle = self.convertir_si_nombre(valeur_actuelle)
+                nouvelle_valeur = self.convertir_si_nombre(nouvelle_valeur)
+                resultat = valeur_actuelle % nouvelle_valeur
+            else:
+                raise RuntimeError(f"Erreur d'exécution: Opérateur d'assignation composée non supporté pour les dictionnaires: {assign_composee.operateur}")
+            
+            base_dict[cle_value] = resultat
+            
+        else:
+            raise RuntimeError(f"Erreur d'exécution: Cible d'assignation composée invalide")
+
     def _get_variable(self, nom):
         """Recherche une variable dans la pile des contextes."""
         for contexte in reversed(self.contextes): # Recherche du plus local au plus global
@@ -205,18 +341,26 @@ class VisiteurInterpretation:
     def visiter_acces_index(self, acces_index):
         base_value = self.executer(acces_index.base)
         index_value = self.executer(acces_index.index)
+
+    # Cas dictionnaire: supporter également base[index] pour les dicts
+        if isinstance(base_value, dict):
+            if index_value not in base_value:
+                raise RuntimeError(f"Erreur d'exécution: Clé '{index_value}' non trouvée dans le dictionnaire")
+            return base_value[index_value]
+
+    # Cas liste (comportement existant)
         if not isinstance(base_value, list):
-            raise RuntimeError("Erreur d'exécution: L'opérande gauche de l'accès par index doit être une liste")
+            raise RuntimeError("Erreur d'exécution: L'opérande gauche de l'accès par index doit être une liste ou un dictionnaire")
         if not isinstance(index_value, int):
             raise RuntimeError("Erreur d'exécution: L'index doit être un entier")
         if index_value < 0 or index_value >= len(base_value):
             raise RuntimeError("Erreur d'exécution: Index de liste hors limites")
-        
-        # Assurez-vous que l'élément récupéré est évalué s'il s'agit d'un nœud AST
+
         element = base_value[index_value]
-        if isinstance(element, Noeud): # Si c'est un nœud AST, exécutez-le
+        if isinstance(element, Noeud):
             return self.executer(element)
         return element
+
 
     def visiter_acces_dictionnaire(self, acces_dict):
         base_value = self.executer(acces_dict.base)
@@ -259,6 +403,51 @@ class VisiteurInterpretation:
             compteur += 1
         if compteur >= 50:
             print("🛑 Sécurité: boucle arrêtée après 50 itérations")
+
+    def visiter_boucle_pour_dans(self, boucle):
+        """Visite une boucle pour...dans"""
+        iterable_value = self.executer(boucle.iterable)
+        
+        # Vérifier que l'itérable est bien itérable
+        if not isinstance(iterable_value, (list, dict, str)):
+            raise RuntimeError("Erreur d'exécution: L'objet à droite de 'dans' doit être itérable (liste, dictionnaire ou chaîne)")
+        
+        # Créer un nouveau contexte pour la variable de boucle
+        self.contextes.append({})
+        
+        compteur = 0
+        try:
+            if isinstance(iterable_value, list):
+                # Itérer sur une liste
+                for element in iterable_value:
+                    if compteur >= 50:  # Sécurité anti-boucle infinie
+                        print("🛑 Sécurité: boucle pour...dans arrêtée après 50 itérations")
+                        break
+                    self._set_variable(boucle.variable, element)
+                    self.executer(boucle.corps)
+                    compteur += 1
+            elif isinstance(iterable_value, dict):
+                # Itérer sur les clés d'un dictionnaire
+                for cle in iterable_value.keys():
+                    if compteur >= 50:  # Sécurité anti-boucle infinie
+                        print("🛑 Sécurité: boucle pour...dans arrêtée après 50 itérations")
+                        break
+                    self._set_variable(boucle.variable, cle)
+                    self.executer(boucle.corps)
+                    compteur += 1
+            elif isinstance(iterable_value, str):
+                # Itérer sur les caractères d'une chaîne
+                for caractere in iterable_value:
+                    if compteur >= 50:  # Sécurité anti-boucle infinie
+                        print("🛑 Sécurité: boucle pour...dans arrêtée après 50 itérations")
+                        break
+                    self._set_variable(boucle.variable, caractere)
+                    self.executer(boucle.corps)
+                    compteur += 1
+        finally:
+            # Retirer le contexte de boucle
+            if len(self.contextes) > 1:
+                self.contextes.pop()
 
     def visiter_bloc(self, bloc):
         # Créer un nouveau contexte pour ce bloc seulement si nécessaire
@@ -330,6 +519,16 @@ if __name__ == "__main__":
     # Test IA
     soit modele = reseau_neuronal([2, 5, 1], "relu")
     soit donnees = charger_jeu_de_donnees("iris")
+    
+    # Test boucle pour...dans
+    soit noms = ["Alice", "Bob", "Charlie"]
+    pour nom dans noms {
+        imprimer("Bonjour", nom)
+    }
+    
+    # Test assignations composées
+    x += 5
+    imprimer("x après +=5:", x)
     """
     lexer = LexerFIA(code)
     tokens = lexer.tokeniser()

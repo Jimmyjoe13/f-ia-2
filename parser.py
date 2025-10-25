@@ -48,7 +48,8 @@ class ParserFIA:
         elif token.type == 'TANT_QUE':
             return self.analyser_boucle_tant_que()
         elif token.type == 'POUR':
-            return self.analyser_boucle_pour()
+            # Déterminer si c'est "pour...dans" ou "pour(;;)"
+            return self.analyser_boucle_pour_ou_pour_dans()
         elif token.type == 'IDENTIFIANT':
             # Regarder plus loin pour déterminer le type d'instruction
             return self.analyser_instruction_identifiant()
@@ -67,19 +68,62 @@ class ParserFIA:
         # Analyser l'expression complète (identifiant + accès éventuels)
         expr = self.analyser_expression()
         
-        # Vérifier si c'est suivi d'une assignation
-        if self.regarder_token().type == 'ASSIGNATION':
-            # C'est une assignation
+        # Vérifier le type d'assignation
+        token_courant = self.regarder_token()
+        
+        if token_courant.type == 'ASSIGNATION':
+            # Assignation normale
             self.consommer_token('ASSIGNATION')
             valeur = self.analyser_expression()
             if self.regarder_token().type == 'POINT_VIRGULE':
                 self.consommer_token('POINT_VIRGULE')
             return Assignation(expr, valeur)
+        elif token_courant.type in ['PLUS_EGAL', 'MOINS_EGAL', 'FOIS_EGAL', 'DIVISE_EGAL', 'MODULO_EGAL']:
+            # Assignation composée (+=, -=, *=, /=, %=)
+            operateur = self.consommer_token().valeur
+            valeur = self.analyser_expression()
+            if self.regarder_token().type == 'POINT_VIRGULE':
+                self.consommer_token('POINT_VIRGULE')
+            return AssignationComposee(expr, operateur, valeur)
         else:
             # C'est juste une expression
             if self.regarder_token().type == 'POINT_VIRGULE':
                 self.consommer_token('POINT_VIRGULE')
             return ExpressionStatement(expr)
+
+    def analyser_boucle_pour_ou_pour_dans(self):
+        self.consommer_token('POUR')
+        
+        # Regarder s'il y a une parenthèse ou un identifiant
+        if self.regarder_token().type == 'PARENTHESE_OUVRANTE':
+            # C'est une boucle pour classique : pour (init; condition; increment)
+            return self.analyser_boucle_pour_classique()
+        elif self.regarder_token().type == 'IDENTIFIANT':
+            # C'est potentiellement une boucle pour...dans
+            return self.analyser_boucle_pour_dans()
+        else:
+            raise ParseError(f"Syntaxe de boucle 'pour' invalide", 
+                           ligne=self.regarder_token().ligne,
+                           colonne=self.regarder_token().colonne)
+
+    def analyser_boucle_pour_classique(self):
+        self.consommer_token('PARENTHESE_OUVRANTE')
+        init = self.analyser_instruction()
+        self.consommer_token('POINT_VIRGULE')
+        condition = self.analyser_expression()
+        self.consommer_token('POINT_VIRGULE')
+        increment = self.analyser_instruction()
+        self.consommer_token('PARENTHESE_FERMANTE')
+        corps = self.analyser_bloc()
+        return BouclePour(init, condition, increment, corps)
+
+    def analyser_boucle_pour_dans(self):
+        # Syntaxe: pour variable dans iterable { ... }
+        variable = self.consommer_token('IDENTIFIANT').valeur
+        self.consommer_token('DANS')
+        iterable = self.analyser_expression()
+        corps = self.analyser_bloc()
+        return BouclePourDans(variable, iterable, corps)
 
     def analyser_declaration_variable(self):
         self.consommer_token('SOIT')
@@ -142,18 +186,6 @@ class ParserFIA:
         self.consommer_token('PARENTHESE_FERMANTE')
         corps = self.analyser_bloc()
         return BoucleTantQue(condition, corps)
-
-    def analyser_boucle_pour(self):
-        self.consommer_token('POUR')
-        self.consommer_token('PARENTHESE_OUVRANTE')
-        init = self.analyser_instruction()
-        self.consommer_token('POINT_VIRGULE')
-        condition = self.analyser_expression()
-        self.consommer_token('POINT_VIRGULE')
-        increment = self.analyser_instruction()
-        self.consommer_token('PARENTHESE_FERMANTE')
-        corps = self.analyser_bloc()
-        return BouclePour(init, condition, increment, corps)
 
     def analyser_bloc(self):
         self.consommer_token('ACCOLADE_OUVRANTE')
