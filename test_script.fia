@@ -1,0 +1,14 @@
+soit x = 10
+soit y = 15
+si (x < y) { soit test = "vrai" } sinon { soit test = "faux" }
+imprimer(test)
+soit liste = [1, 2, 3, 4, 5]
+soit i = 0
+tant_que (i < longueur(liste)) {
+    si (liste[i] % 2 == 0) {
+        imprimer(liste[i], " est pair")
+    } sinon {
+        imprimer(liste[i], " est impair")
+    }
+    i = i + 1
+}
