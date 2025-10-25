@@ -1,10 +1,15 @@
-# builtin.py
 import math
 import random
 from errors import RuntimeError
 
 def imprimer(*args):
     print(*args)
+
+def lire(invite=""):
+    try:
+        return input(invite)
+    except Exception as e:
+        raise RuntimeError(f"Erreur d'exécution: échec de lecture entrée utilisateur: {e}")
 
 def longueur(objet):
     if not isinstance(objet, (str, list, dict)):
@@ -181,6 +186,7 @@ def joindre(liste, separateur=""):
 FONCTIONS_INTEGREES = {
     # Fonctions de base
     'imprimer': imprimer,
+    'lire': lire,
     'longueur': longueur,
     'arrondir': arrondir,
     'aleatoire': aleatoire,
